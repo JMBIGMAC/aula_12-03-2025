@@ -1,0 +1,19 @@
+#como deve ser adcionado ao models:
+analize o models.py e então faça:
+adicione ao models:
+classe turma:
+    1.  turma(o mesmo do turma choices do class aluno)
+    2.  itinerario{
+        1-3 ds (desenvolvimento de sintemas)
+        1-3 cn (ciencias da natureza)
+        1-3 j (jogos)
+    }(obs.: deve ser automaticamente selecionado au clicar em em sua turma correspondente, ex: 1A = 1DS)
+    3. representante(dá opções de qual aluno pode ser escolhido baseado na turma escolhida no itinerario)
+    4. vice_representante(o mesmo que representante)
+classe contrato:
+    deve ter:
+        turma/itinerario
+        nomr do aluno(chave estrangeira)
+        nome do responsavel(chave estrangeira)
+        email do responsavel(chave estrangeira)
+    (obs: deve ser possivel escolher o Responsavel e o aluno baseado na turma/itinerario)
