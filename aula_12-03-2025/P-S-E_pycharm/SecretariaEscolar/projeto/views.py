@@ -20,7 +20,9 @@ def contrato_pdf(request, contrato_id):
     p.drawString(100, 760, f"Responsável: {contrato.responsavel.first_name} {contrato.responsavel.last_name}")
     p.drawString(100, 740, f"Turma: {contrato.turma}")
     p.drawString(100, 720, f"Email do Responsável: {contrato.email_responsavel}")
-    p.drawString(100, 700, "Este contrato confirma a matrícula do aluno na instituição de ensino.")
+    p.drawString(100, 700, "O responsável se compromete a garantir que o aluno cumpra as normas da escola.")
+    p.drawString(100, 680, "Além disso, o responsável assume total responsabilidade pelas ações do aluno.")
+    p.drawString(100, 640, "Assinatura do Responsável: __________________________")
     p.save()
 
     return response

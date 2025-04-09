@@ -103,13 +103,16 @@ class Turma(models.Model):
         return f"{self.turma} - {self.get_itinerario_display()}"
 
 class Contrato(models.Model):
-    turma = models.ForeignKey(Turma, on_delete=models.CASCADE, verbose_name="Turma/Itinerário")
+    turma = models.ForeignKey(Turma, on_delete=models.CASCADE, verbose_name="Turma/Itinerário", blank=True, null=True)
     aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, verbose_name="Nome do Aluno")
     responsavel = models.ForeignKey(Responsavel, on_delete=models.CASCADE, verbose_name="Nome do Responsável", blank=True, null=True)
     email_responsavel = models.EmailField(verbose_name="Email do Responsável", blank=True, null=True)
+    signed_contract = models.FileField(upload_to='signed_contracts/', blank=True, null=True, verbose_name="Contrato Assinado")
 
     def save(self, *args, **kwargs):
-        if self.aluno and not self.responsavel:
+        if self.aluno:
+            # Fetch the Turma instance based on the class_choices value
+            self.turma = Turma.objects.filter(turma=self.aluno.class_choices).first()
             self.responsavel = self.aluno.responsavel
             self.email_responsavel = self.aluno.responsavel.email
         super().save(*args, **kwargs)
