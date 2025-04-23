@@ -1,19 +1,69 @@
-#como deve ser adcionado ao models:
-analize o models.py e então faça:
-adicione ao models:
-classe turma:
-    1.  turma(o mesmo do turma choices do class aluno)
-    2.  itinerario{
-        1-3 ds (desenvolvimento de sintemas)
-        1-3 cn (ciencias da natureza)
-        1-3 j (jogos)
-    }(obs.: deve ser automaticamente selecionado au clicar em em sua turma correspondente, ex: 1A = 1DS)
-    3. representante(dá opções de qual aluno pode ser escolhido baseado na turma escolhida no itinerario)
-    4. vice_representante(o mesmo que representante)
-classe contrato:
-    deve ter:
-        turma/itinerario
-        nomr do aluno(chave estrangeira)
-        nome do responsavel(chave estrangeira)
-        email do responsavel(chave estrangeira)
-    (obs: deve ser possivel escolher o Responsavel e o aluno baseado na turma/itinerario)
+#como deve ser modificado o models contrato:
+no contrato que ficara em pdf deve ficar assim:
+CONTRATO DE MATRÍCULA ESCOLAR
+
+Pelo presente instrumento particular, as partes abaixo assinadas, de um lado, a Escola {Nome da Escola}, doravante denominada Escola, e de outro lado, o responsável pelo aluno(a), {Nome do Responsável}, CPF {CPF do Responsável}, residente e domiciliado(a) à {Endereço Completo do Responsável}, e-mail de contato: {email do responsável}, doravante denominado(a) Responsável, firmam o presente contrato de matrícula escolar, que se regerá pelas seguintes cláusulas:
+
+Cláusula 1 - OBJETO DO CONTRATO
+1.1 O presente contrato tem por objeto a matrícula do aluno(a) {Nome do Aluno}, na {turma} do ano letivo de {Ano da turma} na Escola {Pedro Ludovico}.
+
+1.2 A matrícula será considerada válida a partir da data de assinatura deste contrato, com a efetivação do pagamento da primeira parcela da mensalidade escolar.
+
+Cláusula 2 - OBRIGAÇÕES DA ESCOLA
+2.1 A Escola compromete-se a oferecer educação de qualidade, conforme as diretrizes e normas do Ministério da Educação e Cultura, garantindo o cumprimento do conteúdo programático adequado à série/ano escolar.
+
+2.2 A Escola deverá disponibilizar ao aluno(a) os recursos pedagógicos necessários, como livros didáticos, materiais e atividades complementares.
+
+2.3 A Escola se compromete a disponibilizar canais de comunicação, como {meio de comunicação: e-mail, telefone} para interação entre a Escola e o Responsável.
+
+Cláusula 3 - OBRIGAÇÕES DO RESPONSÁVEL
+3.1 O Responsável compromete-se a realizar o pagamento das mensalidades escolares dentro dos prazos estabelecidos, conforme o valor de {900}.
+
+3.2 O Responsável deverá comunicar à Escola qualquer alteração nos dados cadastrais do aluno(a), como endereço, telefone ou e-mail, dentro de {8 meses} dias.
+
+3.3 O Responsável concorda em manter a frequência do aluno(a) regular, conforme a política de faltas da escola, e colaborar com o processo educacional do aluno(a).
+
+Cláusula 4 - PAGAMENTO E CONDIÇÕES FINANCEIRAS
+4.1 O valor da mensalidade escolar será de {900} por mês, com vencimento todo dia {20} de cada mês.
+
+4.2 O pagamento deverá ser realizado por meio de {Pix}.
+
+4.3 Em caso de atraso no pagamento, será cobrada uma multa de {15%} sobre o valor da mensalidade, além de juros de {5%} ao mês.
+
+Cláusula 5 - DURAÇÃO E RESCISÃO
+5.1 O presente contrato terá duração correspondente ao ano letivo de {9 meses}, podendo ser renovado automaticamente para o próximo ano letivo, salvo manifestação em contrário por qualquer uma das partes.
+
+5.2 O Responsável poderá solicitar a rescisão deste contrato mediante aviso prévio de {5} dias, sem prejuízo de eventuais pendências financeiras.
+
+5.3 A Escola poderá rescindir este contrato caso o aluno(a) apresente comportamento inadequado ou não cumpra as normas internas da instituição.
+
+Cláusula 6 - DISPOSIÇÕES GERAIS
+6.1 As partes acordam que todas as informações fornecidas durante o processo de matrícula, como dados pessoais e acadêmicos do aluno(a), serão tratadas de forma confidencial, respeitando a legislação vigente de proteção de dados.
+
+6.2 Este contrato poderá ser alterado mediante acordo mútuo entre as partes, sendo todas as alterações formalizadas por escrito.
+
+6.3 Em caso de litígios, as partes concordam em submeter-se à mediação, e, se necessário, à jurisdição do foro da cidade de {goiana}, {goias}.
+
+Cláusula 7 - ASSINATURAS
+Por estarem assim justas e contratadas, as partes assinam o presente contrato em duas vias de igual teor e forma, na presença das testemunhas abaixo.
+
+Responsável:
+Assinatura: ________________________________
+Nome: {Nome do Responsável}
+CPF: {CPF do Responsável}
+Data: {Data de Assinatura}
+
+Escola:
+Assinatura: ________________________________
+Nome do Representante: {Clabreso}
+Cargo: {coordenador de turno}
+Data: {Data de Assinatura}
+
+Testemunhas:
+
+Nome: {Nome da Testemunha 1}
+Assinatura: ___________________________
+
+Nome: {Nome da Testemunha 2}
+Assinatura: ___________________________
+

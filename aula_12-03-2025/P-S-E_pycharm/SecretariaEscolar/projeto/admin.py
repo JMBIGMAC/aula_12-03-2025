@@ -62,16 +62,103 @@ class ContratoAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="contratos.pdf"'
 
         p = canvas.Canvas(response)
+        line_height = 15  # Define line spacing
 
         for contrato in queryset:
-            p.drawString(100, 800, "Contrato Escolar")
-            p.drawString(100, 780, f"Aluno: {contrato.aluno.full_name}")
-            p.drawString(100, 760, f"Responsável: {contrato.responsavel.first_name} {contrato.responsavel.last_name}")
-            p.drawString(100, 740, f"Turma: {contrato.turma}")
-            p.drawString(100, 720, f"Email do Responsável: {contrato.email_responsavel}")
-            p.drawString(100, 700, "O responsável se compromete a garantir que o aluno cumpra as normas da escola.")
-            p.drawString(100, 680, "Além disso, o responsável assume total responsabilidade pelas ações do aluno.")
-            p.drawString(100, 640, "Assinatura do Responsável: __________________________")
+            current_y = 800  # Reset Y position for each contract
+
+            # Header
+            p.setFont("Helvetica-Bold", 16)
+            p.drawString(100, current_y, "CONTRATO DE MATRÍCULA ESCOLAR")
+            current_y -= 30
+
+            # Introduction
+            p.setFont("Helvetica", 10)
+            p.drawString(100, current_y, "Pelo presente instrumento particular, as partes abaixo assinadas, de um lado, a Escola Pedro Ludovico,")
+            current_y -= line_height
+            p.drawString(100, current_y, "doravante denominada Escola, e de outro lado, o responsável pelo aluno(a):")
+            current_y -= 2 * line_height
+
+            # Responsible Party Information
+            p.setFont("Helvetica-Bold", 10)
+            p.drawString(100, current_y, f"Responsável: {contrato.responsavel.first_name} {contrato.responsavel.last_name}")
+            current_y -= line_height
+            p.drawString(100, current_y, f"CPF: {contrato.responsavel.cpf}")
+            current_y -= line_height
+            p.drawString(100, current_y, f"Endereço: {contrato.responsavel.address}")
+            current_y -= line_height
+            p.drawString(100, current_y, f"E-mail: {contrato.responsavel.email}")
+            current_y -= 2 * line_height
+
+            # Student Information
+            p.drawString(100, current_y, f"Aluno: {contrato.aluno.full_name}")
+            current_y -= line_height
+            p.drawString(100, current_y, f"Turma: {contrato.turma}")
+            current_y -= 2 * line_height
+
+            # Contract Clauses
+            p.setFont("Helvetica", 10)
+            p.drawString(100, current_y, "Cláusula 1 - OBJETO DO CONTRATO")
+            current_y -= line_height
+            p.drawString(100, current_y, f"1.1 O presente contrato tem por objeto a matrícula do aluno(a) {contrato.aluno.full_name},")
+            current_y -= line_height
+            p.drawString(100, current_y, f"na turma {contrato.turma} do ano letivo de {contrato.turma.turma} na Escola Pedro Ludovico.")
+            current_y -= 2 * line_height
+
+            p.drawString(100, current_y, "Cláusula 2 - OBRIGAÇÕES DO RESPONSÁVEL")
+            current_y -= line_height
+            p.drawString(100, current_y, "2.1 O Responsável compromete-se a realizar o pagamento das ")
+            current_y -= line_height
+            p.drawString(100, current_y, "    mensalidades escolares dentro dos prazos estabelecidos.")
+            current_y -= line_height
+            p.drawString(100, current_y, "2.2 O Responsável deverá comunicar à Escola qualquer alteração nos dados cadastrais do aluno(a).")
+            current_y -= 2 * line_height
+
+            p.drawString(100, current_y, "Cláusula 3 - DISPOSIÇÕES GERAIS")
+            current_y -= line_height
+            p.drawString(100, current_y, "3.1 As partes acordam que todas as informações fornecidas durante o processo de matrícula")
+            current_y -= line_height
+            p.drawString(100, current_y, "    serão tratadas de forma confidencial.")
+            current_y -= line_height
+            p.drawString(100, current_y, "3.2 Este contrato poderá ser alterado mediante acordo mútuo entre as partes.")
+            current_y -= 2 * line_height
+
+            # Signatures
+            p.setFont("Helvetica-Bold", 10)
+            p.drawString(100, current_y, "Responsável:")
+            current_y -= line_height
+            p.drawString(100, current_y, "Assinatura: ________________________________")
+            current_y -= line_height
+            p.drawString(100, current_y, f"Nome: {contrato.responsavel.first_name} {contrato.responsavel.last_name}")
+            current_y -= line_height
+            p.drawString(100, current_y, f"CPF: {contrato.responsavel.cpf}")
+            current_y -= line_height
+            p.drawString(100, current_y, "Data: ____/____/________")
+            current_y -= 2 * line_height
+
+            p.drawString(100, current_y, "Escola:")
+            current_y -= line_height
+            p.drawString(100, current_y, "Assinatura: ________________________________")
+            current_y -= line_height
+            p.drawString(100, current_y, "Nome do Representante: Calabreso")
+            current_y -= line_height
+            p.drawString(100, current_y, "Cargo: Coordenador de Turno")
+            current_y -= line_height
+            p.drawString(100, current_y, "Data: ____/____/________")
+            current_y -= 2 * line_height
+
+            # Witnesses
+            p.drawString(100, current_y, "Testemunhas:")
+            current_y -= line_height
+            p.drawString(100, current_y, "Nome: ______________________________________")
+            current_y -= line_height
+            p.drawString(100, current_y, "Assinatura: ________________________________")
+            current_y -= line_height
+            p.drawString(100, current_y, "Nome: ______________________________________")
+            current_y -= line_height
+            p.drawString(100, current_y, "Assinatura: ________________________________")
+            current_y -= 2 * line_height
+
             p.showPage()
 
         p.save()
