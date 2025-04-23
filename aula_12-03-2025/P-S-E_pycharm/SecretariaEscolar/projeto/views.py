@@ -11,6 +11,9 @@ def home(request):
 def contrato_pdf(request, contrato_id):
     contrato = get_object_or_404(Contrato, id=contrato_id)
 
+    if contrato.aluno not in contrato.responsavel.alunos.all():
+        return HttpResponse("Erro: O aluno não pertence ao responsável informado.", status=400)
+
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="contrato_{contrato.id}.pdf"'
 
