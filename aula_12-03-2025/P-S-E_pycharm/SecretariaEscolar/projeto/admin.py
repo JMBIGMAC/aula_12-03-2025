@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from .models import Responsavel, Aluno, Professor, Turma, Contrato
 from .models import Nota, Materia
+from .models import DesempenhoAcademico, Presenca, Agenda, Livro
 
 class ResponsaveisAdmin(admin.ModelAdmin):
     list_display = ('id', 'first_name', 'last_name', 'phone_number', 'email', 'address', 'cpf', 'birthday')
@@ -201,6 +202,26 @@ class NotasAdmin(admin.ModelAdmin):
             extra_context['title'] = f"Notas - Aluno {Aluno.objects.get(id=aluno_id)}"
         return super().changelist_view(request, extra_context=extra_context)
 
+class DesempenhoAcademicoAdmin(admin.ModelAdmin):
+    list_display = ('aluno', 'turma', 'materia', 'media_final')
+    list_filter = ('turma', 'materia')
+    search_fields = ('aluno__full_name', 'materia__name')
+
+class PresencaAdmin(admin.ModelAdmin):
+    list_display = ('aluno', 'data', 'status', 'observacao')
+    list_filter = ('data', 'status')
+    search_fields = ('aluno__full_name',)
+
+class AgendaAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'titulo', 'data_evento', 'lembrete')
+    list_filter = ('data_evento', 'lembrete')
+    search_fields = ('usuario__username', 'titulo')
+
+class LivroAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'autor', 'status', 'usuario_em_uso')
+    list_filter = ('status',)
+    search_fields = ('titulo', 'autor')
+
 admin.site.register(Materia)
 admin.site.register(Responsavel, ResponsaveisAdmin)
 admin.site.register(Aluno, AlunoAdmin)
@@ -208,3 +229,7 @@ admin.site.register(Professor, ProfessorAdmin)
 admin.site.register(Turma, TurmaAdmin)
 admin.site.register(Contrato, ContratoAdmin)
 admin.site.register(Nota, NotasAdmin)
+admin.site.register(DesempenhoAcademico, DesempenhoAcademicoAdmin)
+admin.site.register(Presenca, PresencaAdmin)
+admin.site.register(Agenda, AgendaAdmin)
+admin.site.register(Livro, LivroAdmin)

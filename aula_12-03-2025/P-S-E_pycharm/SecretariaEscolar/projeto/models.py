@@ -183,3 +183,70 @@ class Nota(models.Model):
 
     def __str__(self):
         return f"Notas de {self.aluno.full_name} - {self.materia} ({self.turma})"
+
+class DesempenhoAcademico(models.Model):
+    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, verbose_name="Aluno")
+    turma = models.ForeignKey(Turma, on_delete=models.CASCADE, verbose_name="Turma")
+    materia = models.ForeignKey(Materia, on_delete=models.CASCADE, verbose_name="Matéria")
+    bimestre_1 = models.FloatField(default=0, verbose_name="Nota 1º Bimestre")
+    bimestre_2 = models.FloatField(default=0, verbose_name="Nota 2º Bimestre")
+    bimestre_3 = models.FloatField(default=0, verbose_name="Nota 3º Bimestre")
+    bimestre_4 = models.FloatField(default=0, verbose_name="Nota 4º Bimestre")
+    media_final = models.FloatField(editable=False, verbose_name="Média Final")
+
+    def save(self, *args, **kwargs):
+        self.media_final = (self.bimestre_1 + self.bimestre_2 + self.bimestre_3 + self.bimestre_4) / 4
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Desempenho de {self.aluno.full_name} - {self.materia}"
+
+class Presenca(models.Model):
+    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, verbose_name="Aluno")
+    data = models.DateField(verbose_name="Data")
+    status = models.CharField(
+        max_length=1,
+        choices=[('F', 'Falta'), ('P', 'Presente')],
+        verbose_name="Status"
+    )
+    observacao = models.TextField(blank=True, null=True, verbose_name="Observação")
+
+    def __str__(self):
+        return f"Presença de {self.aluno.full_name} em {self.data}"
+
+class Agenda(models.Model):
+    usuario = models.ForeignKey('auth.User', on_delete=models.CASCADE, verbose_name="Usuário")
+    titulo = models.CharField(max_length=100, verbose_name="Título")
+    descricao = models.TextField(verbose_name="Descrição")
+    data_evento = models.DateField(verbose_name="Data do Evento")
+    arquivo = models.FileField(upload_to='agenda_files/', blank=True, null=True, verbose_name="Arquivo")
+    lembrete = models.BooleanField(default=False, verbose_name="Lembrete Ativado")
+
+    def __str__(self):
+        return f"Agenda de {self.usuario.username} - {self.titulo}"
+
+class Livro(models.Model):
+    titulo = models.CharField(max_length=200, verbose_name="Título do Livro")
+    autor = models.CharField(max_length=100, verbose_name="Autor")
+    resumo = models.TextField(verbose_name="Resumo")
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('disponivel', 'Disponível'),
+            ('em_uso', 'Em Uso'),
+            ('fora_de_estoque', 'Fora de Estoque'),
+            ('indisponivel', 'Indisponível')
+        ],
+        default='disponivel',
+        verbose_name="Status"
+    )
+    usuario_em_uso = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Usuário em Uso"
+    )
+
+    def __str__(self):
+        return self.titulo

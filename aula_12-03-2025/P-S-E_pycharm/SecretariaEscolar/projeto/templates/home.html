@@ -1,13 +1,23 @@
-   <!DOCTYPE html>
-   <html lang="pt-br">
-   <head>
-       <meta charset="UTF-8">
-       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <title>Página Home</title>
-   </head>
-   <body>
-       <h1>Bem-vindo à Página Home!</h1>
-       <p>Esta é a página inicial do meu site Django.</p>
-   </body>
-   </html>
-   
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Home</title>
+</head>
+<body>
+    <h1>Bem-vindo à Página Home!</h1>
+    <p>Esta é a página inicial do meu site Django.</p>
+    <h2>Lembretes da Agenda</h2>
+    <ul>
+        {% for evento in eventos_proximos %}
+            <li>
+                <strong>{{ evento.titulo }}</strong> - {{ evento.data_evento }}
+                {% if evento.lembrete %}
+                    <span style="color: red;">(Lembrete Ativado)</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
