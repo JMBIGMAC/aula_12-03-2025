@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Arquivos - Administração</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/">Página Inicial</a> |
+        <a href="/login">Login</a> |
+        <a href="/cadastro">Cadastro</a> |
+        <a href="/adm">Administração</a>
+    </nav>
+    <h1>Visualizar Código</h1>
+    <form id="form-arquivo">
+        <label for="path">Arquivo (relativo a projeto/):</label>
+        <input type="text" id="path" name="path" value="views.py">
+        <button type="submit">Ver código</button>
+    </form>
+    <pre id="codigo-arquivo" style="background:#eee; padding:1em;"></pre>
+    <script>
+    document.getElementById('form-arquivo').onsubmit = function(e) {
+        e.preventDefault();
+        const path = document.getElementById('path').value;
+        fetch('/api/codigo?path=' + encodeURIComponent(path))
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('codigo-arquivo').textContent = data.codigo || data.error;
+            });
+    };
+    </script>
+</body>
+</html>

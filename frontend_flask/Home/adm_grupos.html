@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Grupos - Administração</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/">Página Inicial</a> |
+        <a href="/login">Login</a> |
+        <a href="/cadastro">Cadastro</a> |
+        <a href="/adm">Administração</a>
+    </nav>
+    <h1>Grupos do Django</h1>
+    <div id="grupos-list"></div>
+    <script>
+    fetch('/api/grupos')
+        .then(r => r.json())
+        .then(data => {
+            let html = '<ul>';
+            data.forEach(g => {
+                html += `<li><b>${g.name}</b> - Usuários: ${g.usuarios.join(', ')}</li>`;
+            });
+            html += '</ul>';
+            document.getElementById('grupos-list').innerHTML = html;
+        });
+    </script>
+</body>
+</html>

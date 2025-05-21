@@ -1,21 +1,94 @@
 body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f4f7fa;
+    color: #222;
     margin: 0;
     padding: 0;
 }
-h1 {
-    color: #2c3e50;
-    text-align: center;
-    margin-top: 40px;
+nav {
+    background: #2d3e50;
+    color: #fff;
+    padding: 1em 2em;
+    margin-bottom: 2em;
+    display: flex;
+    gap: 1em;
+    align-items: center;
 }
-#json-data {
+nav a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.3em 0.8em;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+nav a:hover {
+    background: #1abc9c;
+}
+h1, h2, h3 {
+    color: #2d3e50;
+    margin-top: 0;
+}
+button, input[type="submit"] {
+    background: #1abc9c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5em 1.2em;
+    font-size: 1em;
+    margin: 0.3em 0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+button:hover, input[type="submit"]:hover {
+    background: #159c85;
+}
+form {
     background: #fff;
+    padding: 2em;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px #0001;
+    max-width: 400px;
+    margin: 2em auto;
+}
+input, select {
+    width: 100%;
+    padding: 0.5em;
+    margin: 0.5em 0 1em 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+#json-data, #adm-content, #usuarios-list, #grupos-list, #db-content {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px #0001;
+    padding: 1.5em;
+    margin: 2em auto;
+    max-width: 900px;
+    overflow-x: auto;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 2em;
+}
+td, th {
     border: 1px solid #ddd;
-    padding: 20px;
-    margin: 40px auto;
-    width: 80%;
-    min-height: 100px;
-    font-family: monospace;
-    color: #333;
+    padding: 0.5em 1em;
+    text-align: left;
+}
+th {
+    background: #e9f7f6;
+}
+tr:nth-child(even) {
+    background: #f7f7f7;
+}
+.success {
+    color: #27ae60;
+    font-weight: bold;
+}
+.error {
+    color: #c0392b;
+    font-weight: bold;
 }

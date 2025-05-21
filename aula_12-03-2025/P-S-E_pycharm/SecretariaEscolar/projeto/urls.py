@@ -16,6 +16,11 @@ urlpatterns = [
     path('contratos/', views.contratos_json, name='contratos_json'),
     path('notas/', views.notas_json, name='notas_json'),
     path('materias/', views.materias_json, name='materias_json'),
+    path('usuarios/', views.usuarios_json, name='usuarios_json'),
+    path('grupos/', views.grupos_json, name='grupos_json'),
+    path('criar_usuario/', views.criar_usuario, name='criar_usuario'),
+    path('criar_grupo/', views.criar_grupo, name='criar_grupo'),
+    path('login/', views.login_api, name='login_api'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
 ]
 

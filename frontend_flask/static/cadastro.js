@@ -11,8 +11,8 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                document.getElementById('cadastro-msg').textContent = 'Cadastro realizado! Faça login.';
+            if (data.success && data.redirect) {
+                window.location.href = data.redirect;
             } else {
                 document.getElementById('cadastro-msg').textContent = data.error || 'Erro no cadastro';
             }

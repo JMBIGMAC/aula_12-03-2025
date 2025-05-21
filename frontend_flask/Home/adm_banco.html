@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Banco de Dados - Administração</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/">Página Inicial</a> |
+        <a href="/login">Login</a> |
+        <a href="/cadastro">Cadastro</a> |
+        <a href="/adm">Administração</a>
+    </nav>
+    <h1>Banco de Dados (SQLite)</h1>
+    <button onclick="carregarDB()">Carregar Banco</button>
+    <div id="db-content" style="overflow-x:auto;"></div>
+    <script>
+    function carregarDB() {
+        fetch('/api/banco')
+            .then(r => r.json())
+            .then(data => {
+                let html = '';
+                for (const tabela in data) {
+                    html += `<h3>${tabela}</h3><table border='1'><tr>`;
+                    if (data[tabela].length > 0) {
+                        data[tabela][0].forEach((_,i) => html += `<th>Col${i+1}</th>`);
+                        html += '</tr>';
+                        data[tabela].forEach(row => {
+                            html += '<tr>' + row.map(col => `<td>${col}</td>`).join('') + '</tr>';
+                        });
+                    } else {
+                        html += '<td>Sem dados</td></tr>';
+                    }
+                    html += '</table>';
+                }
+                document.getElementById('db-content').innerHTML = html;
+            });
+    }
+    </script>
+</body>
+</html>

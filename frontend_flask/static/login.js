@@ -10,8 +10,8 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                window.location.href = '/inicial';
+            if (data.success && data.redirect) {
+                window.location.href = data.redirect;
             } else {
                 document.getElementById('login-msg').textContent = data.error || 'Falha no login';
             }

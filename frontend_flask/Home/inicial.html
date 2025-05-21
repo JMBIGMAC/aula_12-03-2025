@@ -7,14 +7,45 @@
 </head>
 <body>
     <nav>
-        <a href="/">Página Inicial</a> |
-        <a href="/login">Login</a> |
-        <a href="/cadastro">Cadastro</a> |
-        <a href="/adm">Administração</a>
+        <a href="/inicial">Página Inicial</a> |
+        <a href="/adm">Administração</a> |
+        <a href="/logout">Sair</a>
     </nav>
-    <h1>Bem-vindo à Secretaria Escolar</h1>
-    <div id="user-info"></div>
-    <div id="modulos"></div>
-    <script src="/static/home.js"></script>
+    <h1>Bem-vindo, {{ username }}!</h1>
+    <div id="modulos">
+        <h2>Opções disponíveis:</h2>
+        <ul>
+            {% if 'admin' in groups %}
+                <li><a href="/adm">Painel de Administração</a></li>
+            {% endif %}
+            {% if 'add_aluno' in permissions %}
+                <li><a href="#">Cadastrar Aluno</a></li>
+            {% endif %}
+            {% if 'view_aluno' in permissions %}
+                <li><a href="#">Visualizar Alunos</a></li>
+            {% endif %}
+            {% if 'add_professor' in permissions %}
+                <li><a href="#">Cadastrar Professor</a></li>
+            {% endif %}
+            {% if 'view_professor' in permissions %}
+                <li><a href="#">Visualizar Professores</a></li>
+            {% endif %}
+            {% if 'add_contrato' in permissions %}
+                <li><a href="#">Cadastrar Contrato</a></li>
+            {% endif %}
+            {% if 'view_contrato' in permissions %}
+                <li><a href="#">Visualizar Contratos</a></li>
+            {% endif %}
+            {% if 'add_nota' in permissions %}
+                <li><a href="#">Cadastrar Nota</a></li>
+            {% endif %}
+            {% if 'view_nota' in permissions %}
+                <li><a href="#">Visualizar Notas</a></li>
+            {% endif %}
+            {% if not permissions and not groups %}
+                <li>Você não possui permissões para acessar módulos.</li>
+            {% endif %}
+        </ul>
+    </div>
 </body>
 </html>

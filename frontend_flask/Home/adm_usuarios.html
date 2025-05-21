@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuários - Administração</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/">Página Inicial</a> |
+        <a href="/login">Login</a> |
+        <a href="/cadastro">Cadastro</a> |
+        <a href="/adm">Administração</a>
+    </nav>
+    <h1>Usuários do Django</h1>
+    <div id="usuarios-list"></div>
+    <script>
+    fetch('/api/usuarios')
+        .then(r => r.json())
+        .then(data => {
+            let html = '<ul>';
+            data.forEach(u => {
+                html += `<li><b>${u.username}</b> (email: ${u.email}) - Grupos: ${u.groups.join(', ')}${u.is_superuser ? ' <span style='color:red'>(superuser)</span>' : ''}</li>`;
+            });
+            html += '</ul>';
+            document.getElementById('usuarios-list').innerHTML = html;
+        });
+    </script>
+</body>
+</html>
