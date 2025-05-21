@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Administração - Secretaria Escolar</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        h1 { color: #2c3e50; }
+        .api-list { margin: 1em 0; }
+        .api-list li { margin-bottom: 0.5em; }
+        .status { margin-top: 2em; color: #16a085; }
+    </style>
+</head>
+<body>
+    <h1>Painel de Administração</h1>
+    <p>Verifique se os endpoints da API estão funcionando:</p>
+    <ul class="api-list">
+        <li><a href="/api/alunos/" target="_blank">Alunos (JSON)</a></li>
+        <li><a href="/api/professores/" target="_blank">Professores (JSON)</a></li>
+        <li><a href="/api/turmas/" target="_blank">Turmas (JSON)</a></li>
+        <li><a href="/api/contratos/" target="_blank">Contratos (JSON)</a></li>
+        <li><a href="/api/notas/" target="_blank">Notas (JSON)</a></li>
+        <li><a href="/api/materias/" target="_blank">Matérias (JSON)</a></li>
+    </ul>
+    <div class="status">
+        <strong>Status:</strong> Se os links acima retornarem dados, a API está funcionando corretamente.
+    </div>
+</body>
+</html>

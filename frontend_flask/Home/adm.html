@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Administração - Secretaria Escolar</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/">Página Inicial</a> |
+        <a href="/login">Login</a> |
+        <a href="/cadastro">Cadastro</a> |
+        <a href="/adm">Administração</a>
+    </nav>
+    <h1>Painel de Administração</h1>
+    <div id="adm-msg"></div>
+    <div>
+        <h2>Gerenciar Usuários e Grupos</h2>
+        <button onclick="location.href='/adm/usuarios'">Usuários</button>
+        <button onclick="location.href='/adm/grupos'">Grupos</button>
+        <button onclick="location.href='/adm/arquivos'">Arquivos</button>
+        <button onclick="location.href='/adm/banco'">Banco de Dados</button>
+    </div>
+    <div id="adm-content"></div>
+    <script src="/static/adm.js"></script>
+</body>
+</html>

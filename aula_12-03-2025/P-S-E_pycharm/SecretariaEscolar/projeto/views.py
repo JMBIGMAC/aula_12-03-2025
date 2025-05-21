@@ -1,9 +1,9 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import simpleSplit
-from .models import Contrato
+from .models import Contrato, Aluno, Responsavel, Professor, Turma, Nota, Materia
 
 def home(request):
     return render(request, 'home.html')
@@ -190,3 +190,65 @@ def contrato_pdf(request, contrato_id):
     p.save()
 
     return response
+
+def exemplo_json(request):
+    try:
+        data = {"mensagem": "Dados enviados do backend Django!", "status": "ok"}
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+def api_overview(request):
+    """Endpoint para overview das rotas da API."""
+    data = {
+        "alunos": "/api/alunos/",
+        "professores": "/api/professores/",
+        "turmas": "/api/turmas/",
+        "contratos": "/api/contratos/",
+        "notas": "/api/notas/",
+        "materias": "/api/materias/",
+    }
+    return JsonResponse(data)
+
+# API para listar alunos
+from django.forms.models import model_to_dict
+
+def alunos_json(request):
+    alunos = Aluno.objects.all()
+    data = [model_to_dict(aluno) for aluno in alunos]
+    return JsonResponse(data, safe=False)
+
+def professores_json(request):
+    professores = Professor.objects.all()
+    data = []
+    for prof in professores:
+        prof_dict = model_to_dict(prof)
+        # Serializar o campo ManyToMany 'materias' como lista de nomes
+        prof_dict['materias'] = list(prof.materias.values_list('name', flat=True))
+        data.append(prof_dict)
+    return JsonResponse(data, safe=False)
+
+def turmas_json(request):
+    turmas = Turma.objects.all()
+    data = [model_to_dict(turma) for turma in turmas]
+    return JsonResponse(data, safe=False)
+
+def contratos_json(request):
+    contratos = Contrato.objects.all()
+    data = [model_to_dict(contrato) for contrato in contratos]
+    return JsonResponse(data, safe=False)
+
+def notas_json(request):
+    notas = Nota.objects.all()
+    data = [model_to_dict(nota) for nota in notas]
+    return JsonResponse(data, safe=False)
+
+def materias_json(request):
+    materias = Materia.objects.all()
+    data = [model_to_dict(materia) for materia in materias]
+    return JsonResponse(data, safe=False)
+
+# Página de administração customizada
+
+def admin_dashboard(request):
+    return render(request, 'admin_dashboard.html')

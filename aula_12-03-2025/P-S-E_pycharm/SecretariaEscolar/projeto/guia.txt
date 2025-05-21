@@ -1,15 +1,1 @@
-faça Novas implementações para o app Secretaria; (COMPLETO)
-Gestão de notas e desempenho acadêmico: (COMPLETO)
-modifique o modelo de notas para que tenha 4 bimestres e que seja possivel salvar no sistema as notas do bimestre atual como desempenho academico;
-Histórico Acadêmico completo: (COMPLETO)
-faça alterações para seja feito um calculo da media dos bimestres junto a um local(por aluno e por classe) para armazenar isso;
-Alertas de Desempenho: (PENDENTE)
-nas notas do sistema de notas quando o professor estiver colocando as notas do aluno, toda vez que um aluno estiver com a nota do bimestre atual abaixo de 60% de 100%,crie uma aba abaixo das area de cadastro de notas para avisar que esse aluno em especifico esta com problema de notas(%) e em qual materia;
-Gestão de faltas e presenças: (COMPLETO)
-Crie uma model para presenças diarias(segunda a sexta) sobre F(Falta) P(Presente) e uma aba separada abaixo para OBS(para observações);
-Relatório de faltas: (PENDENTE)
-um geito de todo dia (manual ou automatico) salva os dados de presença n o sistema;
-Agenda dos professores: (COMPLETO)
-uma forma para que os {Usuarios} possam usufruir de uma agenda que salva textos ,fotos e arquivos em dias e meses e com função de avisar o Usuario na tela home se alguma coisa salva na agenda esta perto de vencer;
-Gestão de materiais didáticos (biblioteca): (COMPLETO)
-cadastro de livros, status de livros(em uso por(user/aluno)(disponivel)(fora de estoque)(indisponivel), resumo de livro);
+
