@@ -3,18 +3,25 @@ from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import simpleSplit
-from .models import Contrato, Aluno, Responsavel, Professor, Turma, Nota, DesempenhoAcademico, Presenca, Agenda, Livro
+from .models import Contrato, Aluno, Responsavel, Professor, Turma, Nota, DesempenhoAcademico, Presenca, Agenda, Livro, Materia
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import status, generics, viewsets
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from .serializers import AlunoSerializer, UserSerializer, ProfessorSerializer, ResponsavelSerializer
+from .serializers import (
+    AlunoSerializer, UserSerializer, ProfessorSerializer, ResponsavelSerializer,
+    MateriaSerializer, TurmaSerializer, ContratoSerializer, NotaSerializer,
+    DesempenhoAcademicoSerializer, PresencaSerializer, AgendaSerializer, LivroSerializer
+)
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from django.apps import apps
+from rest_framework import serializers
 
 def home(request):
     return render(request, 'home.html')
@@ -232,21 +239,150 @@ class ProfessorListView(generics.ListAPIView):
     serializer_class = ProfessorSerializer
     permission_classes = [IsAuthenticated]
 
+class AlunoDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Aluno.objects.all()
+    serializer_class = AlunoSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'registration_number'
+
+class ProfessorDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Professor.objects.all()
+    serializer_class = ProfessorSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+class ResponsavelDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Responsavel.objects.all()
+    serializer_class = ResponsavelSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+# Serializers para os outros modelos
+class TurmaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Turma
+        fields = '__all__'
+
+class ContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contrato
+        fields = '__all__'
+
+class NotaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Nota
+        fields = '__all__'
+
+class DesempenhoAcademicoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DesempenhoAcademico
+        fields = '__all__'
+
+class PresencaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Presenca
+        fields = '__all__'
+
+class AgendaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Agenda
+        fields = '__all__'
+
+class LivroSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Livro
+        fields = '__all__'
+
+# ViewSets para os outros modelos
+class MateriaViewSet(viewsets.ModelViewSet):
+    queryset = Materia.objects.all()
+    serializer_class = MateriaSerializer
+    permission_classes = [IsAuthenticated]
+
+class TurmaViewSet(viewsets.ModelViewSet):
+    queryset = Turma.objects.all()
+    serializer_class = TurmaSerializer
+    permission_classes = [IsAuthenticated]
+
+class ContratoViewSet(viewsets.ModelViewSet):
+    queryset = Contrato.objects.all()
+    serializer_class = ContratoSerializer
+    permission_classes = [IsAuthenticated]
+
+class NotaViewSet(viewsets.ModelViewSet):
+    queryset = Nota.objects.all()
+    serializer_class = NotaSerializer
+    permission_classes = [IsAuthenticated]
+
+class DesempenhoAcademicoViewSet(viewsets.ModelViewSet):
+    queryset = DesempenhoAcademico.objects.all()
+    serializer_class = DesempenhoAcademicoSerializer
+    permission_classes = [IsAuthenticated]
+
+class PresencaViewSet(viewsets.ModelViewSet):
+    queryset = Presenca.objects.all()
+    serializer_class = PresencaSerializer
+    permission_classes = [IsAuthenticated]
+
+class AgendaViewSet(viewsets.ModelViewSet):
+    queryset = Agenda.objects.all()
+    serializer_class = AgendaSerializer
+    permission_classes = [IsAuthenticated]
+
+class LivroViewSet(viewsets.ModelViewSet):
+    queryset = Livro.objects.all()
+    serializer_class = LivroSerializer
+    permission_classes = [IsAuthenticated]
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_data_api(request):
     user = request.user
-    permissions = []
     groups = list(user.groups.values_list('name', flat=True))
-    if user.is_superuser or 'devs' in groups:
-        permissions = ['view_alunos', 'view_responsaveis', 'view_professores', 'edit', 'delete', 'add']
-    elif 'staff' in groups:
-        permissions = ['view_alunos', 'view_responsaveis', 'view_professores', 'edit']
-    elif 'responsavel' in groups:
-        permissions = ['view_alunos', 'view_responsaveis']
+    is_superuser = user.is_superuser
+
+    # Descobre todos os models do app 'projeto' que possuem API
+    app_models = apps.get_app_config('projeto').get_models()
+    model_names = [m.__name__.lower() for m in app_models]
+    # Mapeia nomes amigáveis para URLs (ajuste se necessário)
+    model_url_map = {
+        'aluno': 'alunos',
+        'professor': 'professores',
+        'responsavel': 'responsaveis',
+        'materia': 'materias',
+        'turma': 'turmas',
+        'contrato': 'contratos',
+        'nota': 'notas',
+        'desempenhoacademico': 'desempenhoacademico',
+        'presenca': 'presencas',
+        'agenda': 'agendas',
+        'livro': 'livros',
+    }
+    # Permissões padrão por grupo
+    group_perms = {
+        'devs': ['view', 'add', 'edit', 'delete'],
+        'STAFF': ['view', 'edit'],
+        'responsaveis': ['view'],
+    }
+    # Calcula permissões do usuário para cada model
+    user_models = {}
+    for model in model_names:
+        url_name = model_url_map.get(model, model)
+        perms = set()
+        if is_superuser or 'devs' in [g.lower() for g in groups]:
+            perms = set(group_perms['devs'])
+        elif 'STAFF' in [g.lower() for g in groups]:
+            perms = set(group_perms['STAFF'])
+        elif 'responsaveis' in [g.lower() for g in groups]:
+            if url_name == 'alunos':
+                perms = set(group_perms['responsaveis'])
+            else:
+                perms = set()
+        user_models[url_name] = list(perms)
+
     return Response({
         'username': user.username,
         'email': user.email,
-        'permissions': permissions,
         'groups': groups,
+        'models_permissions': user_models,
     })

@@ -25,7 +25,7 @@
         });
 
         let userGroups = [];
-        let userPermissions = [];
+        let userModelsPermissions = {};
 
         async function loadUserData() {
             const accessToken = localStorage.getItem('access_token');
@@ -41,7 +41,7 @@
                     const userData = await userResponse.json();
                     document.getElementById('username').textContent = userData.username;
                     userGroups = userData.groups || [];
-                    userPermissions = userData.permissions || [];
+                    userModelsPermissions = userData.models_permissions || {};
                     renderNavigation();
                 } else if (userResponse.status === 401) {
                     await refreshToken();
@@ -57,15 +57,11 @@
         function renderNavigation() {
             const nav = document.getElementById('navigation-buttons');
             nav.innerHTML = '';
-            if (userPermissions.includes('view_alunos')) {
-                addNavigationButton('Alunos', 'alunos');
-            }
-            if (userPermissions.includes('view_professores')) {
-                addNavigationButton('Professores', 'professores');
-            }
-            if (userPermissions.includes('view_responsaveis')) {
-                addNavigationButton('Responsáveis', 'responsaveis');
-            }
+            Object.keys(userModelsPermissions).forEach(model => {
+                if (userModelsPermissions[model].includes('view')) {
+                    addNavigationButton(capitalize(model), model);
+                }
+            });
         }
 
         function addNavigationButton(text, model) {
@@ -84,6 +80,8 @@
                 const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
                 if (response.ok) {
                     const data = await response.json();
+                    window.lastModelSample = window.lastModelSample || {};
+                    if (data.length > 0) window.lastModelSample[model] = data[0];
                     renderModelList(model, data);
                 } else if (response.status === 401) {
                     await refreshToken();
@@ -103,18 +101,12 @@
             data.forEach(item => {
                 const li = document.createElement('li');
                 li.textContent = getModelDisplay(model, item);
-                // Permissões para devs: CRUD, staff: editar, responsavel: só ver
-                if (userGroups.includes('devs')) {
-                    addCrudButtons(li, model, item, true, true, true, true);
-                } else if (userGroups.includes('staff')) {
-                    addCrudButtons(li, model, item, false, true, true, false);
-                } else if (userGroups.includes('responsavel')) {
-                    // Apenas visualizar
-                }
+                const perms = userModelsPermissions[model] || [];
+                addCrudButtons(li, model, item, perms.includes('add'), perms.includes('edit'), perms.includes('delete'), perms.includes('view'));
                 ul.appendChild(li);
             });
             contentDiv.appendChild(ul);
-            if (userGroups.includes('devs')) {
+            if ((userModelsPermissions[model] || []).includes('add')) {
                 const addBtn = document.createElement('button');
                 addBtn.textContent = `Adicionar ${capitalize(model)}`;
                 addBtn.onclick = () => showAddForm(model);
@@ -140,10 +132,11 @@
         }
 
         function getModelDisplay(model, item) {
-            if (model === 'alunos') return `${item.full_name} (${item.class_choices}) - ${item.email_aluno}`;
-            if (model === 'professores') return `${item.first_name} ${item.last_name} - ${item.email}`;
-            if (model === 'responsaveis') return `${item.first_name} ${item.last_name} - ${item.email}`;
-            return JSON.stringify(item);
+            // Exibe campos principais dinamicamente
+            let keys = Object.keys(item);
+            // Mostra até 3 campos principais
+            let display = keys.slice(0, 3).map(k => `${k}: ${item[k]}`).join(' | ');
+            return display;
         }
 
         function capitalize(str) {
@@ -151,18 +144,106 @@
         }
 
         function showAddForm(model) {
-            // Exemplo: pode ser expandido para cada model
             const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML += `<p>Formulário de adição de ${model} (implementar)</p>`;
+            let formHtml = `<h3>Adicionar ${capitalize(model)}</h3><form id="add-form">`;
+            // Gera campos dinamicamente (exceto id/registration_number)
+            let sample = window.lastModelSample && window.lastModelSample[model];
+            if (sample) {
+                Object.keys(sample).forEach(key => {
+                    if (key === 'id' || key === 'registration_number') return;
+                    formHtml += `${capitalize(key)}: <input name="${key}" required><br>`;
+                });
+            } else {
+                formHtml += '<i>Preencha os campos</i><br>';
+            }
+            formHtml += `<button type="submit">Salvar</button></form>`;
+            contentDiv.innerHTML += formHtml;
+            document.getElementById('add-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = Object.fromEntries(new FormData(e.target).entries());
+                await addItem(model, formData);
+            };
         }
+
         function showEditForm(model, item) {
             const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML += `<p>Formulário de edição de ${model} (implementar)</p>`;
+            let formHtml = `<h3>Editar ${capitalize(model)}</h3><form id="edit-form">`;
+            let keys = Object.keys(item);
+            keys.forEach(key => {
+                if (key === 'id' || key === 'registration_number') return;
+                formHtml += `${capitalize(key)}: <input name="${key}" value="${item[key]}" required><br>`;
+            });
+            formHtml += `<button type="submit">Salvar</button></form>`;
+            contentDiv.innerHTML += formHtml;
+            document.getElementById('edit-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = Object.fromEntries(new FormData(e.target).entries());
+                await editItem(model, item, formData);
+            };
         }
-        function deleteItem(model, item) {
-            if (confirm('Tem certeza que deseja deletar?')) {
-                // Implementar deleção via API
-                alert('Deleção (mock) de ' + model);
+
+        async function addItem(model, data) {
+            const accessToken = localStorage.getItem('access_token');
+            let url = `/api/${model}/`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    loadModelData(model);
+                } else {
+                    alert('Erro ao adicionar.');
+                }
+            } catch (error) {
+                alert('Erro ao adicionar.');
+            }
+        }
+
+        async function editItem(model, item, data) {
+            const accessToken = localStorage.getItem('access_token');
+            let url = `/api/${model}/${item.registration_number || item.id}/`;
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    loadModelData(model);
+                } else {
+                    alert('Erro ao editar.');
+                }
+            } catch (error) {
+                alert('Erro ao editar.');
+            }
+        }
+
+        async function deleteItem(model, item) {
+            if (!confirm('Tem certeza que deseja deletar?')) return;
+            const accessToken = localStorage.getItem('access_token');
+            let url = `/api/${model}/${item.registration_number || item.id}/`;
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                if (response.ok) {
+                    loadModelData(model);
+                } else {
+                    alert('Erro ao deletar.');
+                }
+            } catch (error) {
+                alert('Erro ao deletar.');
             }
         }
 

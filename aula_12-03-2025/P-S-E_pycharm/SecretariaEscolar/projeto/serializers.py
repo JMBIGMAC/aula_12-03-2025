@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Aluno, Responsavel, Professor # Import Responsavel and Professor models
+from .models import Aluno, Responsavel, Professor, Materia, Turma, Contrato, Nota, DesempenhoAcademico, Presenca, Agenda, Livro
 
 class AlunoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,4 +27,36 @@ class ResponsavelSerializer(serializers.ModelSerializer):
 class ProfessorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Professor
+        fields = '__all__'
+class MateriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Materia
+        fields = '__all__'
+class TurmaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Turma
+        fields = '__all__'
+class ContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contrato
+        fields = '__all__'
+class NotaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Nota
+        fields = '__all__'
+class DesempenhoAcademicoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DesempenhoAcademico
+        fields = '__all__'
+class PresencaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Presenca
+        fields = '__all__'
+class AgendaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Agenda
+        fields = '__all__'
+class LivroSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Livro
         fields = '__all__'

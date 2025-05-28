@@ -129,7 +129,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CSRF_TRUSTED_ORIGINS = ['https://localhost:8000']
+CSRF_TRUSTED_ORIGINS = ['https://localhost:8000','https://vigilant-halibut-qw597x6wjpr34g5-8000.app.github.dev']
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Add DRF and Simple JWT settings

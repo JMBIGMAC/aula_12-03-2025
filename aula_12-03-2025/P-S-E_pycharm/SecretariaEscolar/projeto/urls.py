@@ -4,6 +4,17 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import (TokenObtainPairView,TokenRefreshView,)
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'api/materias', views.MateriaViewSet, basename='materias')
+router.register(r'api/turmas', views.TurmaViewSet, basename='turmas')
+router.register(r'api/contratos', views.ContratoViewSet, basename='contratos')
+router.register(r'api/notas', views.NotaViewSet, basename='notas')
+router.register(r'api/desempenhoacademico', views.DesempenhoAcademicoViewSet, basename='desempenhoacademico')
+router.register(r'api/presencas', views.PresencaViewSet, basename='presencas')
+router.register(r'api/agendas', views.AgendaViewSet, basename='agendas')
+router.register(r'api/livros', views.LivroViewSet, basename='livros')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -17,7 +28,12 @@ urlpatterns = [
     path('api/user-data/', views.user_data_api, name='user_data'),
     path('api/responsaveis/', views.ResponsavelListView.as_view(), name='responsaveis_api'),
     path('api/professores/', views.ProfessorListView.as_view(), name='professores_api'),
+    path('api/alunos/<int:registration_number>/', views.AlunoDetailView.as_view(), name='aluno_detail_api'),
+    path('api/professores/<int:id>/', views.ProfessorDetailView.as_view(), name='professor_detail_api'),
+    path('api/responsaveis/<int:id>/', views.ResponsavelDetailView.as_view(), name='responsavel_detail_api'),
 ]
+
+urlpatterns += router.urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
