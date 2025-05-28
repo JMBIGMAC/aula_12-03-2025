@@ -3,21 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página Home</title>
+    <title>Home</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #navigation-buttons button { margin-right: 10px; padding: 10px; cursor: pointer; }
+        #content { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px; }
+        .crud-btn { margin-left: 5px; }
+    </style>
 </head>
 <body>
-    <h1>Bem-vindo à Página Home!</h1>
-    <p>Esta é a página inicial do meu site Django.</p>
-    <h2>Lembretes da Agenda</h2>
-    <ul>
-        {% for evento in eventos_proximos %}
-            <li>
-                <strong>{{ evento.titulo }}</strong> - {{ evento.data_evento }}
-                {% if evento.lembrete %}
-                    <span style="color: red;">(Lembrete Ativado)</span>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
+    <h1>Bem-vindo, <span id="username"></span>!</h1>
+    <p>Este é o seu painel inicial. Use os botões abaixo para acessar os dados:</p>
+    <div id="navigation-buttons"></div>
+    <div id="content"></div>
+    <button id="logout-button">Sair</button>
+    <script>
+        document.getElementById('logout-button').addEventListener('click', () => {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login/';
+        });
+
+        let userGroups = [];
+        let userPermissions = [];
+
+        async function loadUserData() {
+            const accessToken = localStorage.getItem('access_token');
+            if (!accessToken) {
+                window.location.href = '/login/';
+                return;
+            }
+            try {
+                const userResponse = await fetch('/api/user-data/', {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    document.getElementById('username').textContent = userData.username;
+                    userGroups = userData.groups || [];
+                    userPermissions = userData.permissions || [];
+                    renderNavigation();
+                } else if (userResponse.status === 401) {
+                    await refreshToken();
+                    loadUserData();
+                } else {
+                    alert('Erro ao carregar dados do usuário.');
+                }
+            } catch (error) {
+                alert('Erro ao carregar dados do usuário.');
+            }
+        }
+
+        function renderNavigation() {
+            const nav = document.getElementById('navigation-buttons');
+            nav.innerHTML = '';
+            if (userPermissions.includes('view_alunos')) {
+                addNavigationButton('Alunos', 'alunos');
+            }
+            if (userPermissions.includes('view_professores')) {
+                addNavigationButton('Professores', 'professores');
+            }
+            if (userPermissions.includes('view_responsaveis')) {
+                addNavigationButton('Responsáveis', 'responsaveis');
+            }
+        }
+
+        function addNavigationButton(text, model) {
+            const button = document.createElement('button');
+            button.textContent = text;
+            button.onclick = () => loadModelData(model);
+            document.getElementById('navigation-buttons').appendChild(button);
+        }
+
+        async function loadModelData(model) {
+            const accessToken = localStorage.getItem('access_token');
+            let url = `/api/${model}/`;
+            let contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `<h2>${capitalize(model)}</h2><p>Carregando...</p>`;
+            try {
+                const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    renderModelList(model, data);
+                } else if (response.status === 401) {
+                    await refreshToken();
+                    loadModelData(model);
+                } else {
+                    contentDiv.innerHTML = `<p>Erro ao carregar ${model}.</p>`;
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `<p>Ocorreu um erro ao carregar ${model}.</p>`;
+            }
+        }
+
+        function renderModelList(model, data) {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `<h2>${capitalize(model)}</h2>`;
+            const ul = document.createElement('ul');
+            data.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = getModelDisplay(model, item);
+                // Permissões para devs: CRUD, staff: editar, responsavel: só ver
+                if (userGroups.includes('devs')) {
+                    addCrudButtons(li, model, item, true, true, true, true);
+                } else if (userGroups.includes('staff')) {
+                    addCrudButtons(li, model, item, false, true, true, false);
+                } else if (userGroups.includes('responsavel')) {
+                    // Apenas visualizar
+                }
+                ul.appendChild(li);
+            });
+            contentDiv.appendChild(ul);
+            if (userGroups.includes('devs')) {
+                const addBtn = document.createElement('button');
+                addBtn.textContent = `Adicionar ${capitalize(model)}`;
+                addBtn.onclick = () => showAddForm(model);
+                contentDiv.appendChild(addBtn);
+            }
+        }
+
+        function addCrudButtons(li, model, item, canAdd, canEdit, canDelete, canView) {
+            if (canEdit) {
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Editar';
+                editBtn.className = 'crud-btn';
+                editBtn.onclick = () => showEditForm(model, item);
+                li.appendChild(editBtn);
+            }
+            if (canDelete) {
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Deletar';
+                delBtn.className = 'crud-btn';
+                delBtn.onclick = () => deleteItem(model, item);
+                li.appendChild(delBtn);
+            }
+        }
+
+        function getModelDisplay(model, item) {
+            if (model === 'alunos') return `${item.full_name} (${item.class_choices}) - ${item.email_aluno}`;
+            if (model === 'professores') return `${item.first_name} ${item.last_name} - ${item.email}`;
+            if (model === 'responsaveis') return `${item.first_name} ${item.last_name} - ${item.email}`;
+            return JSON.stringify(item);
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function showAddForm(model) {
+            // Exemplo: pode ser expandido para cada model
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML += `<p>Formulário de adição de ${model} (implementar)</p>`;
+        }
+        function showEditForm(model, item) {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML += `<p>Formulário de edição de ${model} (implementar)</p>`;
+        }
+        function deleteItem(model, item) {
+            if (confirm('Tem certeza que deseja deletar?')) {
+                // Implementar deleção via API
+                alert('Deleção (mock) de ' + model);
+            }
+        }
+
+        async function refreshToken() {
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (!refreshToken) {
+                window.location.href = '/login/';
+                return;
+            }
+            try {
+                const response = await fetch('/api/token/refresh/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh: refreshToken })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('access_token', data.access);
+                    localStorage.setItem('refresh_token', data.refresh);
+                } else {
+                    window.location.href = '/login/';
+                }
+            } catch (error) {
+                window.location.href = '/login/';
+            }
+        }
+
+        loadUserData();
+    </script>
 </body>
 </html>

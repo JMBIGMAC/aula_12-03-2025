@@ -3,7 +3,18 @@ from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import simpleSplit
-from .models import Contrato
+from .models import Contrato, Aluno, Responsavel, Professor, Turma, Nota, DesempenhoAcademico, Presenca, Agenda, Livro
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status, generics
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.settings import api_settings
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.views import APIView
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
+from .serializers import AlunoSerializer, UserSerializer, ProfessorSerializer, ResponsavelSerializer
 
 def home(request):
     return render(request, 'home.html')
@@ -190,3 +201,52 @@ def contrato_pdf(request, contrato_id):
     p.save()
 
     return response
+
+def login_view(request):
+    return render(request, 'login.html')
+
+def signup_view(request):
+    return render(request, 'signup.html')
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def alunos_api(request):
+    alunos = Aluno.objects.all()
+    serializer = AlunoSerializer(alunos, many=True)
+    return Response(serializer.data)
+
+class CreateUserView(generics.CreateAPIView):
+    serializer_class = UserSerializer
+
+class CreateTokenView(ObtainAuthToken):
+    serializer_class = AuthTokenSerializer
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
+class ResponsavelListView(generics.ListAPIView):
+    queryset = Responsavel.objects.all()
+    serializer_class = ResponsavelSerializer
+    permission_classes = [IsAuthenticated]
+
+class ProfessorListView(generics.ListAPIView):
+    queryset = Professor.objects.all()
+    serializer_class = ProfessorSerializer
+    permission_classes = [IsAuthenticated]
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_data_api(request):
+    user = request.user
+    permissions = []
+    groups = list(user.groups.values_list('name', flat=True))
+    if user.is_superuser or 'devs' in groups:
+        permissions = ['view_alunos', 'view_responsaveis', 'view_professores', 'edit', 'delete', 'add']
+    elif 'staff' in groups:
+        permissions = ['view_alunos', 'view_responsaveis', 'view_professores', 'edit']
+    elif 'responsavel' in groups:
+        permissions = ['view_alunos', 'view_responsaveis']
+    return Response({
+        'username': user.username,
+        'email': user.email,
+        'permissions': permissions,
+        'groups': groups,
+    })
