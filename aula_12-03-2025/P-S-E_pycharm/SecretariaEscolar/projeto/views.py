@@ -13,7 +13,7 @@ from rest_framework.settings import api_settings
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from .serializers import (
     AlunoSerializer, UserSerializer, ProfessorSerializer, ResponsavelSerializer,
     MateriaSerializer, TurmaSerializer, ContratoSerializer, NotaSerializer,
@@ -225,6 +225,16 @@ def alunos_api(request):
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
 
+    def perform_create(self, serializer):
+        group_name = self.request.data.get('group')
+        valid_groups = ['devs', 'cordenacao', 'STAFF', 'aluno(a)', 'professor(a)', 'responsavel']
+        if group_name not in valid_groups:
+            raise serializers.ValidationError({'group': 'Grupo inválido.'})
+        user = serializer.save()
+        group, _ = Group.objects.get_or_create(name=group_name)
+        user.groups.add(group)
+        user.save()
+
 class CreateTokenView(ObtainAuthToken):
     serializer_class = AuthTokenSerializer
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
@@ -362,27 +372,47 @@ def user_data_api(request):
     group_perms = {
         'devs': ['view', 'add', 'edit', 'delete'],
         'STAFF': ['view', 'edit'],
-        'responsaveis': ['view'],
+        'responsavel': ['view'],  # Permissão de view para todos os modelos
     }
     # Calcula permissões do usuário para cada model
     user_models = {}
+    lower_groups = [g.lower() for g in groups]
     for model in model_names:
         url_name = model_url_map.get(model, model)
         perms = set()
-        if is_superuser or 'devs' in [g.lower() for g in groups]:
+        if 'devs' in lower_groups:
             perms = set(group_perms['devs'])
-        elif 'STAFF' in [g.lower() for g in groups]:
+        elif 'STAFF' in lower_groups:
             perms = set(group_perms['STAFF'])
-        elif 'responsaveis' in [g.lower() for g in groups]:
-            if url_name == 'alunos':
-                perms = set(group_perms['responsaveis'])
-            else:
-                perms = set()
+        elif 'responsavel' in lower_groups:
+            perms = set(group_perms['responsavel'])
         user_models[url_name] = list(perms)
 
+    # Substitui grupos por models equivalentes
+    user_profile_data = {}
+    if 'responsavel' in lower_groups:
+        try:
+            responsavel = Responsavel.objects.get(email=user.email)
+            user_profile_data['responsavel'] = ResponsavelSerializer(responsavel).data
+        except Responsavel.DoesNotExist:
+            user_profile_data['responsavel'] = None
+    if 'aluno(a)' in lower_groups:
+        try:
+            aluno = Aluno.objects.get(email_aluno=user.email)
+            user_profile_data['aluno'] = AlunoSerializer(aluno).data
+        except Aluno.DoesNotExist:
+            user_profile_data['aluno'] = None
+    if 'professor(a)' in lower_groups:
+        try:
+            professor = Professor.objects.get(email=user.email)
+            user_profile_data['professor'] = ProfessorSerializer(professor).data
+        except Professor.DoesNotExist:
+            user_profile_data['professor'] = None
+    # ...existing code...
     return Response({
         'username': user.username,
         'email': user.email,
         'groups': groups,
         'models_permissions': user_models,
+        'profile_data': user_profile_data,
     })

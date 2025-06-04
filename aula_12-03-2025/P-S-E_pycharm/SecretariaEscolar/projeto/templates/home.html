@@ -5,18 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        #navigation-buttons button { margin-right: 10px; padding: 10px; cursor: pointer; }
-        #content { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px; }
-        .crud-btn { margin-left: 5px; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: #f4f6fb;
+            color: #222;
+        }
+        header {
+            background: #2d3e50;
+            color: #fff;
+            padding: 30px 0 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 8px #0001;
+        }
+        #main-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px #0002;
+            padding: 32px 40px 40px 40px;
+        }
+        #navigation-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 30px;
+            justify-content: flex-start;
+        }
+        #navigation-buttons button {
+            background: #2d3e50;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 16px 32px;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px #0001;
+        }
+        #navigation-buttons button:hover {
+            background: #1a2533;
+        }
+        #content {
+            margin-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 30px;
+            min-height: 200px;
+        }
+        .agenda-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        .agenda-card {
+            background: #f9fafc;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 18px 22px 16px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-left: 5px solid #2d3e50;
+        }
+        .agenda-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2d3e50;
+        }
+        .agenda-date {
+            color: #888;
+            font-size: 0.98em;
+        }
+        .agenda-lembrete {
+            color: #fff;
+            background: #2d3e50;
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 0.95em;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .crud-btn {
+            margin-left: 5px;
+            background: #e0e0e0;
+            color: #2d3e50;
+            border: none;
+            border-radius: 5px;
+            padding: 4px 10px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .crud-btn:hover {
+            background: #b0b8c1;
+        }
+        #logout-button {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 28px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 30px;
+            margin-left: 10px;
+            transition: background 0.2s;
+        }
+        #logout-button:hover {
+            background: #c0392b;
+        }
+        @media (max-width: 700px) {
+            #main-container { padding: 10px; }
+            #navigation-buttons button { padding: 10px 12px; font-size: 1em; }
+        }
     </style>
 </head>
 <body>
-    <h1>Bem-vindo, <span id="username"></span>!</h1>
-    <p>Este é o seu painel inicial. Use os botões abaixo para acessar os dados:</p>
-    <div id="navigation-buttons"></div>
-    <div id="content"></div>
-    <button id="logout-button">Sair</button>
+    <header>
+        <h1>Bem-vindo, <span id="usergroup"></span> <span id="username"></span>!</h1>
+        <p>Este é o seu painel inicial. Use os botões abaixo para acessar os dados:</p>
+    </header>
+    <div id="main-container">
+        <div id="navigation-buttons"></div>
+        <div id="content"></div>
+        <button id="logout-button">Sair</button>
+    </div>
     <script>
         document.getElementById('logout-button').addEventListener('click', () => {
             localStorage.removeItem('access_token');
@@ -40,8 +156,19 @@
                 if (userResponse.ok) {
                     const userData = await userResponse.json();
                     document.getElementById('username').textContent = userData.username;
+                    // Exibe o grupo do usuário
+                    let groupStr = userData.groups && userData.groups.length > 0 ? `[${userData.groups.join(', ')}]` : '[Sem grupo]';
+                    document.getElementById('usergroup').textContent = groupStr;
                     userGroups = userData.groups || [];
                     userModelsPermissions = userData.models_permissions || {};
+                    // Mostra no console o que o grupo permite acessar
+                    let accessList = Object.entries(userModelsPermissions)
+                        .filter(([model, perms]) => perms.length > 0)
+                        .map(([model, perms]) => `${model}: [${perms.join(', ')}]`).join('\n');
+                    console.log('Permissões do grupo:', groupStr, '\nAcesso permitido:', accessList);
+                    // Remove exibição visual das permissões do grupo na tela
+                    let accessDiv = document.getElementById('group-access-info');
+                    if (accessDiv) accessDiv.remove();
                     renderNavigation();
                 } else if (userResponse.status === 401) {
                     await refreshToken();
@@ -96,6 +223,36 @@
 
         function renderModelList(model, data) {
             const contentDiv = document.getElementById('content');
+            if (model === 'agendas') {
+                contentDiv.innerHTML = `<h2>Agenda</h2>`;
+                if (data.length === 0) {
+                    contentDiv.innerHTML += '<p>Nenhum evento de agenda encontrado.</p>';
+                    return;
+                }
+                const grid = document.createElement('div');
+                grid.className = 'agenda-list';
+                data.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'agenda-card';
+                    card.innerHTML = `
+                        <div class="agenda-title">${item.usuario || ''} - ${item.titulo}</div>
+                        <div class="agenda-date">${formatDate(item.data_evento)}</div>
+                        <div>${item.descricao}</div>
+                        ${item.lembrete ? '<span class="agenda-lembrete">Lembrete Ativado</span>' : ''}
+                    `;
+                    const perms = userModelsPermissions[model] || [];
+                    addCrudButtons(card, model, item, perms.includes('add'), perms.includes('edit'), perms.includes('delete'), perms.includes('view'));
+                    grid.appendChild(card);
+                });
+                contentDiv.appendChild(grid);
+                if ((userModelsPermissions[model] || []).includes('add')) {
+                    const addBtn = document.createElement('button');
+                    addBtn.textContent = `Adicionar Evento`;
+                    addBtn.onclick = () => showAddForm(model);
+                    contentDiv.appendChild(addBtn);
+                }
+                return;
+            }
             contentDiv.innerHTML = `<h2>${capitalize(model)}</h2>`;
             const ul = document.createElement('ul');
             data.forEach(item => {
@@ -112,6 +269,12 @@
                 addBtn.onclick = () => showAddForm(model);
                 contentDiv.appendChild(addBtn);
             }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('pt-BR', { year: 'numeric', month: 'short', day: 'numeric' });
         }
 
         function addCrudButtons(li, model, item, canAdd, canEdit, canDelete, canView) {
@@ -262,7 +425,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     localStorage.setItem('access_token', data.access);
-                    localStorage.setItem('refresh_token', data.refresh);
+                    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
                 } else {
                     window.location.href = '/login/';
                 }
@@ -271,6 +434,7 @@
             }
         }
 
+        // Chama o carregamento dos dados do usuário ao carregar a página
         loadUserData();
     </script>
 </body>

@@ -20,6 +20,17 @@
             <label for="password">Senha:</label>
             <input type="password" id="password" name="password" required>
         </div>
+        <div>
+            <label for="group">Grupo:</label>
+            <select id="group" name="group" required>
+                <option value="devs">DEV</option>
+                <option value="cordenacao">COORDENAÇÃO</option>
+                <option value="STAFF">STAFF</option>
+                <option value="aluno(a)">ALUNO(A)</option>
+                <option value="professor(a)">PROFESSOR(A)</option>
+                <option value="responsavel">RESPONSÁVEL</option>
+            </select>
+        </div>
         <button type="submit">Cadastrar</button>
     </form>
     <p>Já tem uma conta? <a href="/login/">Faça login aqui</a>.</p>
@@ -31,6 +42,7 @@
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const group = document.getElementById('group').value;
 
             try {
                 const response = await fetch('/api/register/', {
@@ -38,7 +50,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, email, password })
+                    body: JSON.stringify({ username, email, password, group })
                 });
 
                 const data = await response.json();
@@ -47,7 +59,7 @@
                     alert('Usuário cadastrado com sucesso! Redirecionando para o login.');
                     window.location.href = '/login/';
                 } else {
-                    alert('Erro no cadastro: ' + (data.username || data.email || data.password || JSON.stringify(data)));
+                    alert('Erro no cadastro: ' + (data.username || data.email || data.password || data.group || JSON.stringify(data)));
                 }
             } catch (error) {
                 console.error('Erro:', error);
