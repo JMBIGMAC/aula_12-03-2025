@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import Group
 import re
 
 # CPF Validator
@@ -31,6 +32,14 @@ class Responsavel(models.Model):
         verbose_name="Alunos do Responsável",
         blank=True  # Allow Responsavel to be created without associating Aluno
     )
+    user_group = models.OneToOneField(
+        Group,
+        on_delete=models.CASCADE,
+        related_name="responsavel_group",
+        verbose_name="Grupo do Responsável",
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return self.first_name
@@ -59,6 +68,12 @@ class Aluno(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Responsável",
         related_name="Aluno"
+    )
+    user_group = models.ForeignKey(
+        'auth.Group',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
 
     def save(self, *args, **kwargs):
@@ -101,6 +116,14 @@ class Professor(models.Model):
         related_name="professores_responsaveis",  # Updated related_name to avoid conflict
         verbose_name="Matérias",
         blank=True  # Allow professors to be created without assigning materias
+    )
+    user_group = models.OneToOneField(
+        Group,
+        on_delete=models.CASCADE,
+        related_name="professor_group",
+        verbose_name="Grupo do Professor",
+        null=True,
+        blank=True
     )
 
     def __str__(self):

@@ -10,8 +10,9 @@ from .models import DesempenhoAcademico, Presenca, Agenda, Livro
 class ResponsaveisAdmin(admin.ModelAdmin):
     list_display = ('id', 'first_name', 'last_name', 'phone_number', 'email', 'address', 'cpf', 'birthday')
     list_display_links = ('id', 'first_name', 'last_name')
-    search_fields = ('first_name', 'last_name')
-    list_filter = ('first_name', 'last_name')
+    search_fields = ('first_name', 'last_name', 'cpf', 'email')  # Add CPF and email to search fields
+    list_filter = ('first_name', 'last_name', 'birthday')  # Add birthday to filters
+    filter_horizontal = ('alunos',)  # Allow selecting multiple alunos dynamically
 
 class NotasInline(admin.TabularInline):
     model = Nota

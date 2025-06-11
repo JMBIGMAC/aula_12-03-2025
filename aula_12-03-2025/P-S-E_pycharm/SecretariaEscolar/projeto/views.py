@@ -22,6 +22,21 @@ from .serializers import (
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from django.apps import apps
 from rest_framework import serializers
+from rest_framework.permissions import BasePermission
+
+class GroupPermission(BasePermission):
+    def has_permission(self, request, view):
+        user_groups = request.user.groups.values_list('name', flat=True)
+        model_name = view.queryset.model.__name__.lower()
+        group_permissions = {
+            "aluno(a)": ["agenda", "aluno", "nota", "desempenhoacademico"],
+            "professor(a)": ["agenda", "nota", "presenca", "materia", "turma"],
+            "responsavel": ["agenda", "aluno", "contrato", "responsavel"],
+        }
+        for group in user_groups:
+            if model_name in group_permissions.get(group, []):
+                return True
+        return False
 
 def home(request):
     return render(request, 'home.html')
@@ -222,6 +237,12 @@ def alunos_api(request):
     serializer = AlunoSerializer(alunos, many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def responsaveis_api(request):
+    responsaveis = Responsavel.objects.all()
+    serializer = ResponsavelSerializer(responsaveis, many=True)
+    return Response(serializer.data)
+
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
 
@@ -234,6 +255,21 @@ class CreateUserView(generics.CreateAPIView):
         group, _ = Group.objects.get_or_create(name=group_name)
         user.groups.add(group)
         user.save()
+
+        if group_name == 'responsavel':
+            responsavel_data = {
+                'first_name': self.request.data.get('first_name'),
+                'last_name': self.request.data.get('last_name'),
+                'phone_number': self.request.data.get('phone_number'),
+                'email': user.email,
+                'address': self.request.data.get('address'),
+                'cpf': self.request.data.get('cpf'),
+                'birthday': self.request.data.get('birthday'),
+                'user_group': group
+            }
+            responsavel = Responsavel.objects.create(**responsavel_data)
+            alunos_ids = self.request.data.get('alunos', [])
+            responsavel.alunos.set(Aluno.objects.filter(registration_number__in=alunos_ids))
 
 class CreateTokenView(ObtainAuthToken):
     serializer_class = AuthTokenSerializer
@@ -337,7 +373,7 @@ class PresencaViewSet(viewsets.ModelViewSet):
 class AgendaViewSet(viewsets.ModelViewSet):
     queryset = Agenda.objects.all()
     serializer_class = AgendaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, GroupPermission]
 
 class LivroViewSet(viewsets.ModelViewSet):
     queryset = Livro.objects.all()
@@ -408,7 +444,6 @@ def user_data_api(request):
             user_profile_data['professor'] = ProfessorSerializer(professor).data
         except Professor.DoesNotExist:
             user_profile_data['professor'] = None
-    # ...existing code...
     return Response({
         'username': user.username,
         'email': user.email,
