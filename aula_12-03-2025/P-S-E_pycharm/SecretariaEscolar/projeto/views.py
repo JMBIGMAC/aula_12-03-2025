@@ -23,6 +23,8 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from django.apps import apps
 from rest_framework import serializers
 from rest_framework.permissions import BasePermission
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils.decorators import method_decorator
 
 class GroupPermission(BasePermission):
     def has_permission(self, request, view):
@@ -39,7 +41,10 @@ class GroupPermission(BasePermission):
         return False
 
 def home(request):
-    return render(request, 'home.html')
+    user = request.user
+    user_groups = list(user.groups.values_list('name', flat=True))
+    context = {'user_groups': user_groups}
+    return render(request, 'home.html', context)
 
 def contrato_pdf(request, contrato_id):
     contrato = get_object_or_404(Contrato, id=contrato_id)
@@ -487,3 +492,70 @@ def user_data_api(request):
         'models_permissions': user_models,
         'profile_data': user_profile_data,
     })
+
+# Função utilitária para checar grupo
+
+def user_in_group(user, group_names):
+    return user.is_authenticated and any(g.name in group_names for g in user.groups.all())
+
+@login_required
+def home(request):
+    user = request.user
+    user_groups = list(user.groups.values_list('name', flat=True))
+    context = {'user_groups': user_groups}
+    return render(request, 'home.html', context)
+
+# View para listar contratos com permissões
+from django.views.generic import ListView, DetailView, UpdateView
+from django.urls import reverse_lazy
+
+@method_decorator(login_required, name='dispatch')
+class ContratoListView(ListView):
+    model = Contrato
+    template_name = 'contratos_list.html'
+    context_object_name = 'contratos'
+
+    def get_queryset(self):
+        user = self.request.user
+        groups = list(user.groups.values_list('name', flat=True))
+        qs = Contrato.objects.all()
+        if 'STAFF' in groups:
+            return qs
+        elif 'cordenacao' in groups or 'devs' in groups:
+            return qs
+        else:
+            return Contrato.objects.none()
+
+@method_decorator(login_required, name='dispatch')
+class ContratoUpdateView(UpdateView):
+    model = Contrato
+    fields = ['turma', 'aluno', 'responsavel', 'email_responsavel', 'signed_contract']
+    template_name = 'contrato_edit.html'
+    success_url = reverse_lazy('contratos_list')
+
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        groups = list(user.groups.values_list('name', flat=True))
+        if 'cordenacao' in groups or 'devs' in groups:
+            return super().dispatch(request, *args, **kwargs)
+        return HttpResponse('Acesso negado', status=403)
+
+# View para baixar contrato
+@login_required
+def contrato_download(request, pk):
+    contrato = get_object_or_404(Contrato, pk=pk)
+    if not contrato.signed_contract:
+        return HttpResponse('Contrato não enviado.', status=404)
+    response = HttpResponse(contrato.signed_contract, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{contrato.signed_contract.name.split("/")[-1]}"'
+    return response
+
+# View para listar usuários com filtro por grupo
+@login_required
+def usuarios_list(request):
+    group_filter = request.GET.get('group')
+    users = User.objects.all()
+    if group_filter:
+        users = users.filter(groups__name=group_filter)
+    grupos = Group.objects.all()
+    return render(request, 'usuarios_list.html', {'usuarios': users, 'grupos': grupos, 'group_filter': group_filter})

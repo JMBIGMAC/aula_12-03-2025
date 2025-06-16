@@ -31,6 +31,10 @@ urlpatterns = [
     path('api/alunos/<int:registration_number>/', views.AlunoDetailView.as_view(), name='aluno_detail_api'),
     path('api/professores/<int:id>/', views.ProfessorDetailView.as_view(), name='professor_detail_api'),
     path('api/responsaveis/<int:id>/', views.ResponsavelDetailView.as_view(), name='responsavel_detail_api'),
+    path('contratos/', views.ContratoListView.as_view(), name='contratos_list'),
+    path('contrato/<int:pk>/edit/', views.ContratoUpdateView.as_view(), name='contrato_edit'),
+    path('contrato/<int:pk>/download/', views.contrato_download, name='contrato_download'),
+    path('usuarios/', views.usuarios_list, name='usuarios_list'),
 ]
 
 urlpatterns += router.urls
