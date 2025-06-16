@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro</title>
+    <link rel="stylesheet" href="/static/projeto/styleGeral.css">
+    <script src="/static/projeto/scriptGeral.js"></script>
 </head>
 <body>
     <h1>Cadastro de Usuário</h1>
@@ -32,6 +34,55 @@
                 <option value="responsavel">RESPONSÁVEL</option>
             </select>
         </div>
+        <div id="aluno-fields" style="display: none;">
+            <label for="full_name">Nome Completo:</label>
+            <input type="text" id="full_name" name="full_name">
+            <label for="phone_number_aluno">Nº do celular (--):</label>
+            <input type="text" id="phone_number_aluno" name="phone_number_aluno">
+            <label for="email_aluno">Email do aluno:</label>
+            <input type="email" id="email_aluno" name="email_aluno">
+            <label for="cpf_aluno">CPF do aluno:</label>
+            <input type="text" id="cpf_aluno" name="cpf_aluno">
+            <label for="birthday_aluno">Data de nascimento:</label>
+            <input type="date" id="birthday_aluno" name="birthday_aluno">
+            <label for="class_choices">Turma:</label>
+            <select id="class_choices" name="class_choices">
+                <option value="">Selecione</option>
+                <option value="1A">1º Ano A</option>
+                <option value="1B">1º Ano B</option>
+                <option value="1C">1º Ano C</option>
+                <option value="2A">2º Ano A</option>
+                <option value="2B">2º Ano B</option>
+                <option value="2C">2º Ano C</option>
+                <option value="3A">3º Ano A</option>
+                <option value="3B">3º Ano B</option>
+                <option value="3C">3º Ano C</option>
+            </select>
+            <label for="responsavel">Responsável:</label>
+            <select id="responsavel" name="responsavel">
+                <!-- Options serão preenchidas dinamicamente -->
+            </select>
+        </div>
+        <div id="professor-fields" style="display: none;">
+            <label for="first_name_prof">Nome:</label>
+            <input type="text" id="first_name_prof" name="first_name_prof">
+            <label for="last_name_prof">Sobrenome:</label>
+            <input type="text" id="last_name_prof" name="last_name_prof">
+            <label for="phone_number_prof">Nº do celular (--):</label>
+            <input type="text" id="phone_number_prof" name="phone_number_prof">
+            <label for="email_prof">Email do professor:</label>
+            <input type="email" id="email_prof" name="email_prof">
+            <label for="address_prof">Endereço:</label>
+            <input type="text" id="address_prof" name="address_prof">
+            <label for="cpf_prof">CPF do professor:</label>
+            <input type="text" id="cpf_prof" name="cpf_prof">
+            <label for="registration_number_prof">Número de Registro:</label>
+            <input type="text" id="registration_number_prof" name="registration_number_prof">
+            <label for="materias_prof">Matérias:</label>
+            <select id="materias_prof" name="materias_prof" multiple>
+                <!-- Options serão preenchidas dinamicamente -->
+            </select>
+        </div>
         <div id="responsavel-fields" style="display: none;">
             <label for="first_name">Nome do responsável:</label>
             <input type="text" id="first_name" name="first_name">
@@ -39,8 +90,8 @@
             <input type="text" id="last_name" name="last_name">
             <label for="phone_number">Nº do celular (--):</label>
             <input type="text" id="phone_number" name="phone_number">
-            <label for="email">Email do responsável:</label>
-            <input type="email" id="email" name="email">
+            <label for="email_resp">Email do responsável:</label>
+            <input type="email" id="email_resp" name="email_resp">
             <label for="address">Endereço do responsável:</label>
             <input type="text" id="address" name="address">
             <label for="cpf">CPF do responsável:</label>
@@ -49,7 +100,7 @@
             <input type="date" id="birthday" name="birthday">
             <label for="alunos">Alunos do Responsável:</label>
             <select id="alunos" name="alunos" multiple>
-                <!-- Options will be dynamically populated -->
+                <!-- Options serão preenchidas dinamicamente -->
             </select>
         </div>
         <button type="submit">Cadastrar</button>
@@ -58,9 +109,54 @@
 
     <script>
         document.getElementById('group').addEventListener('change', async (event) => {
-            const responsavelFields = document.getElementById('responsavel-fields');
-            if (event.target.value === 'responsavel') {
-                responsavelFields.style.display = 'block';
+            const group = event.target.value;
+            document.getElementById('aluno-fields').style.display = group === 'aluno(a)' ? 'block' : 'none';
+            document.getElementById('professor-fields').style.display = group === 'professor(a)' ? 'block' : 'none';
+            document.getElementById('responsavel-fields').style.display = group === 'responsavel' ? 'block' : 'none';
+
+            if (group === 'aluno(a)') {
+                // Preencher responsáveis
+                try {
+                    const response = await fetch('/api/responsaveis/');
+                    if (response.ok) {
+                        const responsaveis = await response.json();
+                        const select = document.getElementById('responsavel');
+                        select.innerHTML = '';
+                        responsaveis.forEach(r => {
+                            const option = document.createElement('option');
+                            option.value = r.id;
+                            option.textContent = r.first_name + ' ' + r.last_name;
+                            select.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar responsáveis:', error);
+                }
+            } else if (group === 'professor(a)') {
+                // Preencher matérias (sem autenticação)
+                try {
+                    const response = await fetch('/api/materias/?public=1');
+                    if (response.ok) {
+                        const materias = await response.json();
+                        const select = document.getElementById('materias_prof');
+                        select.innerHTML = '';
+                        // Suporte para resposta como array ou como results (caso paginado)
+                        const lista = Array.isArray(materias) ? materias : (materias.results || []);
+                        lista.forEach(m => {
+                            const option = document.createElement('option');
+                            option.value = m.id;
+                            option.textContent = m.name;
+                            select.appendChild(option);
+                        });
+                    } else {
+                        document.getElementById('materias_prof').innerHTML = '<option disabled>Não foi possível carregar as matérias</option>';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar matérias:', error);
+                    document.getElementById('materias_prof').innerHTML = '<option disabled>Erro ao carregar matérias</option>';
+                }
+            } else if (group === 'responsavel') {
+                // Preencher alunos
                 try {
                     const response = await fetch('/api/alunos/');
                     if (response.ok) {
@@ -77,14 +173,11 @@
                 } catch (error) {
                     console.error('Erro ao carregar alunos:', error);
                 }
-            } else {
-                responsavelFields.style.display = 'none';
             }
         });
 
         document.getElementById('signup-form').addEventListener('submit', async (event) => {
             event.preventDefault();
-
             const group = document.getElementById('group').value;
             const formData = {
                 username: document.getElementById('username')?.value,
@@ -92,7 +185,6 @@
                 password: document.getElementById('password')?.value,
                 group
             };
-
             if (group === 'responsavel') {
                 formData.first_name = document.getElementById('first_name').value;
                 formData.last_name = document.getElementById('last_name').value;
@@ -100,9 +192,26 @@
                 formData.address = document.getElementById('address').value;
                 formData.cpf = document.getElementById('cpf').value;
                 formData.birthday = document.getElementById('birthday').value;
+                formData.email = document.getElementById('email_resp').value;
                 formData.alunos = Array.from(document.getElementById('alunos').selectedOptions).map(option => option.value);
+            } else if (group === 'aluno(a)') {
+                formData.full_name = document.getElementById('full_name').value;
+                formData.phone_number_aluno = document.getElementById('phone_number_aluno').value;
+                formData.email_aluno = document.getElementById('email_aluno').value;
+                formData.cpf_aluno = document.getElementById('cpf_aluno').value;
+                formData.birthday_aluno = document.getElementById('birthday_aluno').value;
+                formData.class_choices = document.getElementById('class_choices').value;
+                formData.responsavel = document.getElementById('responsavel').value;
+            } else if (group === 'professor(a)') {
+                formData.first_name = document.getElementById('first_name_prof').value;
+                formData.last_name = document.getElementById('last_name_prof').value;
+                formData.phone_number = document.getElementById('phone_number_prof').value;
+                formData.email = document.getElementById('email_prof').value;
+                formData.address = document.getElementById('address_prof').value;
+                formData.cpf = document.getElementById('cpf_prof').value;
+                formData.registration_number = document.getElementById('registration_number_prof').value;
+                formData.materias = Array.from(document.getElementById('materias_prof').selectedOptions).map(option => option.value);
             }
-
             try {
                 const response = await fetch('/api/register/', {
                     method: 'POST',
@@ -111,9 +220,7 @@
                     },
                     body: JSON.stringify(formData)
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     alert('Usuário cadastrado com sucesso! Redirecionando para o login.');
                     window.location.href = '/login/';

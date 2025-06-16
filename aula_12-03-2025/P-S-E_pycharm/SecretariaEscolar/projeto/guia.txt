@@ -1,3 +1,5 @@
+passo a passo para melhorar o projeto de secretaria escolar:
+
 Projeto Secretaria Python + Django
 Data termino de auto avaliação: 18/06
 O Projeto deverá ser entregue via GITHUB e o link para o repositório enviado pelo classroom.

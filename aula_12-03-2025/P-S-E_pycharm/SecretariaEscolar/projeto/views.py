@@ -265,11 +265,42 @@ class CreateUserView(generics.CreateAPIView):
                 'address': self.request.data.get('address'),
                 'cpf': self.request.data.get('cpf'),
                 'birthday': self.request.data.get('birthday'),
-                'user_group': group
+                'user_group': group,
+                'user': user
             }
             responsavel = Responsavel.objects.create(**responsavel_data)
             alunos_ids = self.request.data.get('alunos', [])
             responsavel.alunos.set(Aluno.objects.filter(registration_number__in=alunos_ids))
+        elif group_name == 'professor(a)':
+            professor_data = {
+                'first_name': self.request.data.get('first_name'),
+                'last_name': self.request.data.get('last_name'),
+                'phone_number': self.request.data.get('phone_number'),
+                'email': user.email,
+                'address': self.request.data.get('address'),
+                'cpf': self.request.data.get('cpf'),
+                'registration_number': self.request.data.get('registration_number'),
+                'user_group': group,
+                'user': user
+            }
+            professor = Professor.objects.create(**professor_data)
+            materias_ids = self.request.data.get('materias', [])
+            if materias_ids:
+                professor.materias.set(Materia.objects.filter(id__in=materias_ids))
+            professor.save()
+        elif group_name == 'aluno(a)':
+            aluno_data = {
+                'full_name': self.request.data.get('full_name'),
+                'phone_number_aluno': self.request.data.get('phone_number_aluno'),
+                'email_aluno': self.request.data.get('email_aluno'),
+                'cpf_aluno': self.request.data.get('cpf_aluno'),
+                'birthday_aluno': self.request.data.get('birthday_aluno'),
+                'class_choices': self.request.data.get('class_choices'),
+                'responsavel_id': self.request.data.get('responsavel'),
+                'user_group': group,
+                'user': user
+            }
+            Aluno.objects.create(**aluno_data)
 
 class CreateTokenView(ObtainAuthToken):
     serializer_class = AuthTokenSerializer
@@ -343,7 +374,12 @@ class LivroSerializer(serializers.ModelSerializer):
 class MateriaViewSet(viewsets.ModelViewSet):
     queryset = Materia.objects.all()
     serializer_class = MateriaSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        # Permite acesso público para listagem (GET), exige autenticação para outros métodos
+        if self.action == 'list':
+            return []
+        return [IsAuthenticated()]
 
 class TurmaViewSet(viewsets.ModelViewSet):
     queryset = Turma.objects.all()

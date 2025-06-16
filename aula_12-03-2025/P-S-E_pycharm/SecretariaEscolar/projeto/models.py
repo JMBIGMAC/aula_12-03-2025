@@ -40,6 +40,13 @@ class Responsavel(models.Model):
         null=True,
         blank=True
     )
+    user = models.OneToOneField(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='responsavel_profile',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return self.first_name
@@ -72,6 +79,13 @@ class Aluno(models.Model):
     user_group = models.ForeignKey(
         'auth.Group',
         on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    user = models.OneToOneField(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='aluno_profile',
         null=True,
         blank=True
     )
@@ -122,6 +136,13 @@ class Professor(models.Model):
         on_delete=models.CASCADE,
         related_name="professor_group",
         verbose_name="Grupo do Professor",
+        null=True,
+        blank=True
+    )
+    user = models.OneToOneField(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='professor_profile',
         null=True,
         blank=True
     )
