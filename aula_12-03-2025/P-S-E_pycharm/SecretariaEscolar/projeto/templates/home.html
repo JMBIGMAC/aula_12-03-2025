@@ -215,7 +215,13 @@
                 if (response.ok) {
                     const data = await response.json();
                     window.lastModelSample = window.lastModelSample || {};
-                    if (data.length > 0) window.lastModelSample[model] = data[0];
+                    // Se não houver dados, tenta buscar um sample de outro lugar (ex: userModelsPermissions)
+                    if (data.length > 0) {
+                        window.lastModelSample[model] = data[0];
+                    } else if (!window.lastModelSample[model]) {
+                        // Cria um sample vazio baseado nas permissões do model
+                        window.lastModelSample[model] = {};
+                    }
                     renderModelList(model, data);
                 } else if (response.status === 401) {
                     await refreshToken();
@@ -236,24 +242,24 @@
                 contentDiv.innerHTML = `<h2>Agenda</h2>`;
                 if (data.length === 0) {
                     contentDiv.innerHTML += '<p>Nenhum evento de agenda encontrado.</p>';
-                    return;
+                } else {
+                    const grid = document.createElement('div');
+                    grid.className = 'agenda-list';
+                    data.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'agenda-card';
+                        card.innerHTML = `
+                            <div class="agenda-title">${item.usuario || ''} - ${item.titulo}</div>
+                            <div class="agenda-date">${formatDate(item.data_evento)}</div>
+                            <div>${item.descricao}</div>
+                            ${item.lembrete ? '<span class="agenda-lembrete">Lembrete Ativado</span>' : ''}
+                        `;
+                        const perms = userModelsPermissions[model] || [];
+                        addCrudButtons(card, model, item, perms.includes('add'), perms.includes('edit'), perms.includes('delete'), perms.includes('view'));
+                        grid.appendChild(card);
+                    });
+                    contentDiv.appendChild(grid);
                 }
-                const grid = document.createElement('div');
-                grid.className = 'agenda-list';
-                data.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'agenda-card';
-                    card.innerHTML = `
-                        <div class="agenda-title">${item.usuario || ''} - ${item.titulo}</div>
-                        <div class="agenda-date">${formatDate(item.data_evento)}</div>
-                        <div>${item.descricao}</div>
-                        ${item.lembrete ? '<span class="agenda-lembrete">Lembrete Ativado</span>' : ''}
-                    `;
-                    const perms = userModelsPermissions[model] || [];
-                    addCrudButtons(card, model, item, perms.includes('add'), perms.includes('edit'), perms.includes('delete'), perms.includes('view'));
-                    grid.appendChild(card);
-                });
-                contentDiv.appendChild(grid);
                 if ((userModelsPermissions[model] || []).includes('add')) {
                     const addBtn = document.createElement('button');
                     addBtn.textContent = `Adicionar Evento`;
@@ -264,13 +270,17 @@
             }
             contentDiv.innerHTML = `<h2>${capitalize(model)}</h2>`;
             const ul = document.createElement('ul');
-            data.forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = getModelDisplay(model, item);
-                const perms = userModelsPermissions[model] || [];
-                addCrudButtons(li, model, item, perms.includes('add'), perms.includes('edit'), perms.includes('delete'), perms.includes('view'));
-                ul.appendChild(li);
-            });
+            if (data.length === 0) {
+                ul.innerHTML = '<li>Nenhum registro encontrado.</li>';
+            } else {
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = getModelDisplay(model, item);
+                    const perms = userModelsPermissions[model] || [];
+                    addCrudButtons(li, model, item, perms.includes('add'), perms.includes('edit'), perms.includes('delete'), perms.includes('view'));
+                    ul.appendChild(li);
+                });
+            }
             contentDiv.appendChild(ul);
             if ((userModelsPermissions[model] || []).includes('add')) {
                 const addBtn = document.createElement('button');
@@ -319,7 +329,18 @@
             const contentDiv = document.getElementById('content');
             let formHtml = `<h3>Adicionar ${capitalize(model)}</h3><form id="add-form" enctype="multipart/form-data">`;
             let sample = window.lastModelSample && window.lastModelSample[model];
-            if (sample) {
+            // Fallback de campos para models conhecidos
+            const fallbackFields = {
+                alunos: ['full_name', 'phone_number_aluno', 'email_aluno', 'cpf_aluno', 'birthday_aluno', 'class_choices', 'responsavel'],
+                professores: ['first_name', 'last_name', 'phone_number', 'email', 'address', 'cpf', 'registration_number'],
+                turmas: ['nome', 'ano', 'turno'],
+                contratos: ['turma', 'aluno', 'responsavel', 'email_responsavel', 'signed_contract'],
+                notas: ['aluno', 'materia', 'nota_presenca', 'nota_atividade', 'nota_avaliativa', 'nota_final'],
+                desempenhoacademico: ['aluno', 'turma', 'materia', 'media_final'],
+                presencas: ['aluno', 'data', 'status', 'observacao'],
+                livros: ['titulo', 'autor', 'status', 'usuario_em_uso'],
+            };
+            if (sample && Object.keys(sample).length > 0) {
                 Object.keys(sample).forEach(key => {
                     if (key === 'id' || key === 'registration_number') return;
                     if (key.toLowerCase().includes('arquivo') || key.toLowerCase().includes('file')) {
@@ -327,6 +348,18 @@
                     } else if (typeof sample[key] === 'boolean' || key.toLowerCase().includes('lembrete')) {
                         formHtml += `${capitalize(key)}: <input type="checkbox" name="${key}" value="1"><br>`;
                     } else if (key.toLowerCase().includes('data')) {
+                        formHtml += `${capitalize(key)}: <input type="date" name="${key}"><br>`;
+                    } else {
+                        formHtml += `${capitalize(key)}: <input name="${key}"><br>`;
+                    }
+                });
+            } else if (fallbackFields[model]) {
+                fallbackFields[model].forEach(key => {
+                    if (key.toLowerCase().includes('arquivo') || key.toLowerCase().includes('file')) {
+                        formHtml += `${capitalize(key)}: <input type="file" name="${key}"><br>`;
+                    } else if (key.toLowerCase().includes('lembrete')) {
+                        formHtml += `${capitalize(key)}: <input type="checkbox" name="${key}" value="1"><br>`;
+                    } else if (key.toLowerCase().includes('data') || key.toLowerCase().includes('birthday')) {
                         formHtml += `${capitalize(key)}: <input type="date" name="${key}"><br>`;
                     } else {
                         formHtml += `${capitalize(key)}: <input name="${key}"><br>`;
