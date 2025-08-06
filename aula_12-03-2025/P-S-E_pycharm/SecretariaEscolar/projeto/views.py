@@ -30,21 +30,24 @@ class GroupPermission(BasePermission):
     def has_permission(self, request, view):
         user_groups = request.user.groups.values_list('name', flat=True)
         model_name = view.queryset.model.__name__.lower()
+        # Grupo devs tem permissão total
+        #if 'devs' in user_groups:
+            #return True
         group_permissions = {
+            "devs": ["agenda", "aluno", "nota", "desempenhoacademico", "presenca", "materia", "turma", "contrato", "livro"],
             "aluno(a)": ["agenda", "aluno", "nota", "desempenhoacademico"],
             "professor(a)": ["agenda", "nota", "presenca", "materia", "turma"],
             "responsavel": ["agenda", "aluno", "contrato", "responsavel"],
+            "cordenacao": ["agenda", "aluno", "nota", "desempenhoacademico", "presenca", "materia", "turma", "contrato", "livro"],
+            "STAFF":["agenda", "aluno", "nota", "desempenhoacademico", "presenca", "materia", "turma", "contrato", "livro"],
         }
         for group in user_groups:
             if model_name in group_permissions.get(group, []):
                 return True
-        return False
+        return 
 
 def home(request):
-    user = request.user
-    user_groups = list(user.groups.values_list('name', flat=True))
-    context = {'user_groups': user_groups}
-    return render(request, 'home.html', context)
+    return render(request, 'home.html')
 
 def contrato_pdf(request, contrato_id):
     contrato = get_object_or_404(Contrato, id=contrato_id)
@@ -448,8 +451,11 @@ def user_data_api(request):
     # Permissões padrão por grupo
     group_perms = {
         'devs': ['view', 'add', 'edit', 'delete'],
+        'cordenacao': ['view', 'add', 'edit', 'delete'],
         'STAFF': ['view', 'edit'],
-        'responsavel': ['view'],  # Permissão de view para todos os modelos
+        'responsavel': ['view'],
+        'aluno(a)':['view'],
+        'professor(a)':['view','add','edit'],  # Permissão de view para todos os modelos
     }
     # Calcula permissões do usuário para cada model
     user_models = {}
@@ -459,6 +465,8 @@ def user_data_api(request):
         perms = set()
         if 'devs' in lower_groups:
             perms = set(group_perms['devs'])
+        elif 'cordenacao' in lower_groups:
+            perms = set(group_perms['cordenacao'])
         elif 'STAFF' in lower_groups:
             perms = set(group_perms['STAFF'])
         elif 'responsavel' in lower_groups:
@@ -498,12 +506,9 @@ def user_data_api(request):
 def user_in_group(user, group_names):
     return user.is_authenticated and any(g.name in group_names for g in user.groups.all())
 
-@login_required
+# View home pública, sem login_required
 def home(request):
-    user = request.user
-    user_groups = list(user.groups.values_list('name', flat=True))
-    context = {'user_groups': user_groups}
-    return render(request, 'home.html', context)
+    return render(request, 'home.html')
 
 # View para listar contratos com permissões
 from django.views.generic import ListView, DetailView, UpdateView

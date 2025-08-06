@@ -156,28 +156,35 @@
                 if (userResponse.ok) {
                     const userData = await userResponse.json();
                     document.getElementById('username').textContent = userData.username;
-                    // Exibe o grupo do usuário
                     let groupStr = userData.groups && userData.groups.length > 0 ? `[${userData.groups.join(', ')}]` : '[Sem grupo]';
                     document.getElementById('usergroup').textContent = groupStr;
                     userGroups = userData.groups || [];
                     userModelsPermissions = userData.models_permissions || {};
-                    // Mostra no console o que o grupo permite acessar
                     let accessList = Object.entries(userModelsPermissions)
                         .filter(([model, perms]) => perms.length > 0)
                         .map(([model, perms]) => `${model}: [${perms.join(', ')}]`).join('\n');
                     console.log('Permissões do grupo:', groupStr, '\nAcesso permitido:', accessList);
-                    // Remove exibição visual das permissões do grupo na tela
                     let accessDiv = document.getElementById('group-access-info');
                     if (accessDiv) accessDiv.remove();
                     renderNavigation();
                 } else if (userResponse.status === 401) {
                     await refreshToken();
+                    // Após tentar renovar, se ainda não autenticado, força logout
+                    const newToken = localStorage.getItem('access_token');
+                    if (!newToken) {
+                        window.location.href = '/login/';
+                        return;
+                    }
+                    // Tenta novamente
                     loadUserData();
+                } else if (userResponse.status === 403) {
+                    alert('Você não tem permissão para acessar os dados do usuário.');
+                    window.location.href = '/login/';
                 } else {
                     alert('Erro ao carregar dados do usuário.');
                 }
             } catch (error) {
-                alert('Erro ao carregar dados do usuário.');
+                window.location.href = '/login/';
             }
         }
 
@@ -213,6 +220,8 @@
                 } else if (response.status === 401) {
                     await refreshToken();
                     loadModelData(model);
+                } else if (response.status === 403) {
+                    contentDiv.innerHTML = `<p>Você não tem permissão para acessar ${model}.<br>Verifique se seu grupo possui permissão.</p>`;
                 } else {
                     contentDiv.innerHTML = `<p>Erro ao carregar ${model}.</p>`;
                 }
@@ -308,13 +317,20 @@
 
         function showAddForm(model) {
             const contentDiv = document.getElementById('content');
-            let formHtml = `<h3>Adicionar ${capitalize(model)}</h3><form id="add-form">`;
-            // Gera campos dinamicamente (exceto id/registration_number)
+            let formHtml = `<h3>Adicionar ${capitalize(model)}</h3><form id="add-form" enctype="multipart/form-data">`;
             let sample = window.lastModelSample && window.lastModelSample[model];
             if (sample) {
                 Object.keys(sample).forEach(key => {
                     if (key === 'id' || key === 'registration_number') return;
-                    formHtml += `${capitalize(key)}: <input name="${key}" required><br>`;
+                    if (key.toLowerCase().includes('arquivo') || key.toLowerCase().includes('file')) {
+                        formHtml += `${capitalize(key)}: <input type="file" name="${key}"><br>`;
+                    } else if (typeof sample[key] === 'boolean' || key.toLowerCase().includes('lembrete')) {
+                        formHtml += `${capitalize(key)}: <input type="checkbox" name="${key}" value="1"><br>`;
+                    } else if (key.toLowerCase().includes('data')) {
+                        formHtml += `${capitalize(key)}: <input type="date" name="${key}"><br>`;
+                    } else {
+                        formHtml += `${capitalize(key)}: <input name="${key}"><br>`;
+                    }
                 });
             } else {
                 formHtml += '<i>Preencha os campos</i><br>';
@@ -323,39 +339,48 @@
             contentDiv.innerHTML += formHtml;
             document.getElementById('add-form').onsubmit = async (e) => {
                 e.preventDefault();
-                const formData = Object.fromEntries(new FormData(e.target).entries());
-                await addItem(model, formData);
+                const form = e.target;
+                const formData = new FormData(form);
+                await addItemWithFile(model, formData);
             };
         }
 
         function showEditForm(model, item) {
             const contentDiv = document.getElementById('content');
-            let formHtml = `<h3>Editar ${capitalize(model)}</h3><form id="edit-form">`;
+            let formHtml = `<h3>Editar ${capitalize(model)}</h3><form id="edit-form" enctype="multipart/form-data">`;
             let keys = Object.keys(item);
             keys.forEach(key => {
                 if (key === 'id' || key === 'registration_number') return;
-                formHtml += `${capitalize(key)}: <input name="${key}" value="${item[key]}" required><br>`;
+                if (key.toLowerCase().includes('arquivo') || key.toLowerCase().includes('file')) {
+                    formHtml += `${capitalize(key)}: <input type="file" name="${key}"><br>`;
+                } else if (typeof item[key] === 'boolean' || key.toLowerCase().includes('lembrete')) {
+                    formHtml += `${capitalize(key)}: <input type="checkbox" name="${key}" value="1" ${item[key] ? 'checked' : ''}><br>`;
+                } else if (key.toLowerCase().includes('data')) {
+                    formHtml += `${capitalize(key)}: <input type="date" name="${key}" value="${item[key] ? item[key].split('T')[0] : ''}"><br>`;
+                } else {
+                    formHtml += `${capitalize(key)}: <input name="${key}" value="${item[key]}"><br>`;
+                }
             });
             formHtml += `<button type="submit">Salvar</button></form>`;
             contentDiv.innerHTML += formHtml;
             document.getElementById('edit-form').onsubmit = async (e) => {
                 e.preventDefault();
-                const formData = Object.fromEntries(new FormData(e.target).entries());
-                await editItem(model, item, formData);
+                const form = e.target;
+                const formData = new FormData(form);
+                await editItemWithFile(model, item, formData);
             };
         }
 
-        async function addItem(model, data) {
+        async function addItemWithFile(model, formData) {
             const accessToken = localStorage.getItem('access_token');
             let url = `/api/${model}/`;
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
+                        'Authorization': `Bearer ${accessToken}`
                     },
-                    body: JSON.stringify(data)
+                    body: formData
                 });
                 if (response.ok) {
                     loadModelData(model);
@@ -367,17 +392,16 @@
             }
         }
 
-        async function editItem(model, item, data) {
+        async function editItemWithFile(model, item, formData) {
             const accessToken = localStorage.getItem('access_token');
             let url = `/api/${model}/${item.registration_number || item.id}/`;
             try {
                 const response = await fetch(url, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
+                        'Authorization': `Bearer ${accessToken}`
                     },
-                    body: JSON.stringify(data)
+                    body: formData
                 });
                 if (response.ok) {
                     loadModelData(model);
