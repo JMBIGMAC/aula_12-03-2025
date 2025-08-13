@@ -437,27 +437,27 @@
         function getModelCompact(model, item) {
             switch(model) {
                 case 'alunos':
-                    return `<b>Nome:</b> ${item.full_name || item.nome || ''} &nbsp;|&nbsp; <b>Série:</b> ${item.class_choices || item.serie || ''} &nbsp;|&nbsp; <b>Grupo:</b> Alunos`;
+                    return `<b>Nome:</b> ${(item.full_name || item.nome || '--')} &nbsp;|&nbsp; <b>Série:</b> ${(item.class_choices || item.serie || '--')} &nbsp;|&nbsp; <b>Responsável:</b> ${(item.responsavel_nome || '--')} &nbsp;|&nbsp; <b>Grupo:</b> Alunos`;
                 case 'responsaveis':
-                    return `<b>Nome:</b> ${item.first_name || item.nome || ''} ${item.last_name || ''} &nbsp;|&nbsp; <b>Telefone:</b> ${item.phone_number || item.telefone || ''} &nbsp;|&nbsp; <b>Alunos:</b> ${Array.isArray(item.alunos) ? item.alunos.map(getNomeAluno).join(', ') : (item.alunos_nomes || '--')}`;
+                    return `<b>Nome:</b> ${(item.first_name || item.nome || '--')} ${(item.last_name || '')} &nbsp;|&nbsp; <b>Telefone:</b> ${(item.phone_number || item.telefone || '--')} &nbsp;|&nbsp; <b>Alunos:</b> ${(Array.isArray(item.alunos_nomes) && item.alunos_nomes.length > 0) ? item.alunos_nomes.join(', ') : '--'}`;
                 case 'materias':
-                    return `<b>Nome:</b> ${item.name || item.nome || ''}`;
+                    return `<b>Nome:</b> ${(item.name || item.nome || '--')} &nbsp;|&nbsp; <b>Professor:</b> ${(item.professor_nome || '--')}`;
                 case 'professores':
-                    return `<b>Nome:</b> ${item.first_name || item.nome || ''} ${item.last_name || ''} &nbsp;|&nbsp; <b>Matérias:</b> ${Array.isArray(item.materias) ? item.materias.map(getNomeMateria).join(', ') : (item.materias_nomes || '--')}`;
+                    return `<b>Nome:</b> ${(item.first_name || item.nome || '--')} ${(item.last_name || '')} &nbsp;|&nbsp; <b>Matérias:</b> ${(Array.isArray(item.materias_nomes) && item.materias_nomes.length > 0) ? item.materias_nomes.join(', ') : '--'}`;
                 case 'turmas':
-                    return `<b>Turma:</b> ${item.turma || ''} &nbsp;|&nbsp; <b>Representante:</b> ${(item.representante_nome || getNomeAluno(item.representante) || (item.representante && (item.representante.full_name || item.representante.nome)) || '--')}`;
+                    return `<b>Turma:</b> ${(item.turma || '--')} &nbsp;|&nbsp; <b>Matérias:</b> ${(Array.isArray(item.materias_nomes) && item.materias_nomes.length > 0) ? item.materias_nomes.join(', ') : '--'} &nbsp;|&nbsp; <b>Representante:</b> ${(item.representante_nome || '--')}`;
                 case 'contratos':
-                    return `<b>Responsável:</b> ${(item.responsavel_nome || getNomeUsuario(item.responsavel) || '')} &nbsp;|&nbsp; <b>Contrato Assinado:</b> ${(item.signed_contract || '')}`;
+                    return `<b>Responsável:</b> ${(item.responsavel_nome || '--')} &nbsp;|&nbsp; <b>Aluno:</b> ${(item.aluno_nome || '--')} &nbsp;|&nbsp; <b>Contrato Assinado:</b> ${(item.signed_contract || '--')}`;
                 case 'notas':
-                    return `<b>Turma:</b> ${item.turma_nome || (item.turma && (item.turma.turma || item.turma.nome)) || ''} &nbsp;|&nbsp; <b>Matéria:</b> ${item.materia_nome || getNomeMateria(item.materia) || (item.materia && (item.materia.name || item.materia.nome)) || ''}`;
+                    return `<b>Aluno:</b> ${(item.aluno_nome || '--')} &nbsp;|&nbsp; <b>Turma:</b> ${(item.turma_nome || '--')} &nbsp;|&nbsp; <b>Matéria:</b> ${(item.materia_nome || '--')}`;
                 case 'desempenhoacademico':
-                    return `<b>Turma:</b> ${item.turma_nome || (item.turma && (item.turma.turma || item.turma.nome)) || ''} &nbsp;|&nbsp; <b>Matéria:</b> ${item.materia_nome || getNomeMateria(item.materia) || (item.materia && (item.materia.name || item.materia.nome)) || ''}`;
+                    return `<b>Aluno:</b> ${(item.aluno_nome || '--')} &nbsp;|&nbsp; <b>Turma:</b> ${(item.turma_nome || '--')} &nbsp;|&nbsp; <b>Matéria:</b> ${(item.materia_nome || '--')}`;
                 case 'presencas':
-                    return `<b>Aluno:</b> ${item.aluno_nome || getNomeAluno(item.aluno) || item.aluno?.full_name || item.aluno || ''} &nbsp;|&nbsp; <b>Status:</b> ${item.status || ''}`;
+                    return `<b>Aluno:</b> ${(item.aluno_nome || '--')} &nbsp;|&nbsp; <b>Status:</b> ${(item.status || '--')}`;
                 case 'agendas':
-                    return `<b>Usuário:</b> ${getNomeUsuario(item.usuario) || item.usuario || ''} &nbsp;|&nbsp; <b>Título:</b> ${item.titulo || ''} &nbsp;|&nbsp; <b>Data:</b> ${formatDate(item.data_evento)}`;
+                    return `<b>Usuário:</b> ${(item.usuario_nome || '--')} &nbsp;|&nbsp; <b>Título:</b> ${(item.titulo || '--')} &nbsp;|&nbsp; <b>Data:</b> ${formatDate(item.data_evento)}`;
                 case 'livros':
-                    return `<b>Título:</b> ${item.titulo || ''} &nbsp;|&nbsp; <b>Status:</b> ${item.status || ''}`;
+                    return `<b>Título:</b> ${(item.titulo || '--')} &nbsp;|&nbsp; <b>Status:</b> ${(item.status || '--')} &nbsp;|&nbsp; <b>Usuário em uso:</b> ${(item.usuario_em_uso_nome || '--')}`;
                 default:
                     return getModelDisplay(model, item);
             }
